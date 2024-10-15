@@ -1,0 +1,222 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #778d77;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+header {
+  background-color: #333;
+  color: white;
+  padding: 0 16px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+
+  h1 {
+    font-size: 16px;
+    a {
+      color: white;
+    }
+  }
+}
+
+main {
+  padding: 1rem;
+}
+
+footer {
+  background-color: #333;
+  color: white;
+  padding: 1rem 0;
+  text-align: center;
+  bottom: 0;
+  width: 100%;
+  margin-top: auto;
+}
+
+button {
+  padding: 8px;
+  background-color: #c07c00;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+}
+
+.notepad-header {
+  margin-bottom: 16px;
+}
+
+.notepad-main-nav {
+  position: absolute;
+  top: 9px;
+  right: 16px;
+
+  ul {
+    display: flex;
+    list-style-type: none;
+    gap: 8px;
+  }
+}
+
+.notepad-body {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+.notepade-save-language-container,
+.notepade-save-container {
+  max-width: 768px;
+  margin: 0 auto;
+}
+.notepade-save-language-container {
+  text-align: center;
+
+  select {
+    margin-top: 16px;
+    margin-bottom: 16px;
+    padding: 8px;
+    font-size: 16px;
+  }
+}
+.notepade-save-container {
+  input[type=text], textarea {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 8px;
+    font-size: 16px;
+  }
+  textarea {
+    min-height: 200px;
+  }
+
+  .notepad-btn-remove {
+    margin-left: auto;
+  }
+
+  .notepad-options,
+  .notepad-submenu {
+    display: flex;
+    gap: 8px;
+  }
+
+  .notepad-submenu {
+    margin-bottom: 16px;
+  }
+
+  .notepad-list {
+    list-style-type: none;
+  }
+
+  .notepad-item {
+    background-color: black;
+    color: white;
+    margin-bottom: 16px;
+    padding: 16px;
+  }
+
+  .notepad-item-move {
+    background-color: rgba(255,255,255,.2);
+    padding: 8px;
+    margin: -16px -16px 16px;
+    position: relative;
+
+    &::before,
+    &::after {
+      position: absolute;
+      right: 50%;
+      translate: 50% 0;
+      content: '';
+      display: block;
+      width: 40px;
+      height: 2px;
+      background-color: rgba(255,255,255,.5);
+    }
+    &::before {
+      top: 13px;
+    }
+    &::after {
+      top: 20px;
+    }
+  }
+
+  .notepad-add-new-note.notepad-add-new-note--fixed {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 9;
+    background-color: white;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+
+    i {
+      font-size: 40px;
+      color: #006900;
+
+      &::before {
+        padding: 0;
+        margin: 0;
+      }
+    }
+  }
+
+  .notepad-single {
+    .notepad-add-new-note,
+    .notepad-item-move,
+    .notepad-export,
+    .notepad-import {
+      display: none;
+    }
+    li:not(.notepad-active-item) {
+      display: none;
+    }
+  }
+  .notepad-item-date {
+    font-size: 11px;
+    margin-top: 8px;
+    position: absolute;
+    top: 3px;
+    right: 16px;
+  }
+  .notepad-modal-remove {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,.8);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    p {
+      margin-bottom: 8px;
+    }
+    &__container {
+      max-width: 250px;
+      background-color: #778d77;
+      margin-top: auto;
+      margin-bottom: auto;
+      padding: 16px;
+    }
+    &__row {
+      display: flex;
+      gap: 8px;
+    }
+  }
+}
