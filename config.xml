@@ -1,5 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.notepado.notepado" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.notepado.notepado" version="1.0.0"
+        xmlns="http://www.w3.org/ns/widgets"
+        xmlns:cdv="http://cordova.apache.org/ns/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android">
     <name>Notepado</name>
     <description>Sample Apache Cordova App</description>
     <author email="dev@cordova.apache.org" href="https://cordova.apache.org">
@@ -8,4 +11,25 @@
     <content src="index.html" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
+
+    <!-- Wtyczki -->
+    <plugin name="cordova-plugin-file" spec="^6.0.2" />
+    <plugin name="cordova-plugin-android-permissions" />
+    <plugin name="cordova-plugin-simple-file-chooser" />
+    <plugin name="cordova-plugin-filechooser" />
+    <plugin name="cordova-plugin-documentpicker" />
+
+    <!-- Preferencje dotyczące pamięci -->
+    <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+
+    <!-- Uprawnienia dla Androida 14 i niższych -->
+    <platform name="android">
+        <config-file parent="/manifest" target="AndroidManifest.xml">
+            <!-- Uprawnienia do odczytu/zapisu dla starszych wersji Androida -->
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
+            <!-- Zarządzanie pamięcią masową dla Androida 11 i wyższych -->
+            <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+        </config-file>
+    </platform>
 </widget>

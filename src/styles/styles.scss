@@ -52,6 +52,11 @@ button {
   color: #fff;
   border: none;
   border-radius: 6px;
+
+  &:active {
+    background-color: #fff;
+    color: #c07c00;
+  }
 }
 
 .notepad-header {
@@ -177,7 +182,8 @@ button {
     .notepad-add-new-note,
     .notepad-item-move,
     .notepad-export,
-    .notepad-import {
+    .notepad-import,
+    .notepad-copy-json {
       display: none;
     }
     li:not(.notepad-active-item) {

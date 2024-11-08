@@ -1,12 +1,16 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-// Removed the import for js-cookie as we're switching to localStorage
 import { translations } from '../elements/notepadSaveTranslations';
 
-// Extend the global window object to include cordova
 declare global {
     interface Window {
-        cordova?: any;
+        resolveLocalFileSystemURL(uri: string, successCallback: (entry: any) => void, errorCallback?: (error: any) => void): void;
+    }
+}
+
+declare global {
+    interface Window {
+        cordova: Cordova;
     }
 }
 
@@ -81,7 +85,6 @@ const isValidFormData = (data: any): data is FormData => {
     );
 };
 
-// Main component for drag-and-drop form list
 const DragAndDropFormList: React.FC = () => {
     const [items, setItems] = useState<FormData[]>([]);
     const [visibleDescriptions, setVisibleDescriptions] = useState<string | null>(null);
@@ -250,26 +253,119 @@ const DragAndDropFormList: React.FC = () => {
         setConfirmRemoveId(id);
     };
 
-    const handleExportIndexedDB = async () => {
+
+    // const requestPermissions = () => {
+    //     const permissions = (window as any).cordova.plugins.permissions;
+    //     const perms = [
+    //         permissions.WRITE_EXTERNAL_STORAGE,
+    //         permissions.READ_EXTERNAL_STORAGE
+    //     ];
+    //
+    //     permissions.requestPermissions(perms, (status: any) => {
+    //         if (!status.hasPermission) {
+    //             alert("Missing required permissions to write files.");
+    //         }
+    //     }, (error: any) => {
+    //         console.error("Error requesting permissions:", error);
+    //         alert("Failed to obtain permissions.");
+    //     });
+    // };
+
+    // const handleExportIndexedDB = async () => {
+    //     try {
+    //         console.log('Loading data from IndexedDB...');
+    //         const allData = await loadAllData();
+    //         if (!allData) {
+    //             throw new Error('No data returned from IndexedDB');
+    //         }
+    //
+    //         console.log('Converting data to JSON...');
+    //         const jsonData = JSON.stringify(allData, null, 2);
+    //         const blob = new Blob([jsonData], { type: 'application/json' });
+    //
+    //         const onDeviceReady = () => {
+    //             if (window.cordova) {
+    //                 requestPermissions();
+    //                 saveFile();
+    //             } else {
+    //                 console.log('Browser environment - Cordova functions are not available.');
+    //             }
+    //         };
+    //
+    //         const saveFile = () => {
+    //             const mimeType = 'application/json';
+    //             const fileName = 'data.json';
+    //
+    //             const intent = (window as any).cordova.plugins.intentShim;
+    //
+    //             intent.startActivityForResult(
+    //                 {
+    //                     action: intent.ACTION_CREATE_DOCUMENT,
+    //                     type: mimeType,
+    //                     extras: {
+    //                         'android.intent.extra.TITLE': fileName
+    //                     }
+    //                 },
+    //                 (result: any) => {
+    //                     if (result && result.data) {
+    //                         const uri = result.data;
+    //                         writeFile(uri);
+    //                     } else {
+    //                         alert('Failed to obtain file URI.');
+    //                     }
+    //                 },
+    //                 (error: any) => {
+    //                     console.error('Error creating document:', error);
+    //                     alert('Failed to create document.');
+    //                 }
+    //             );
+    //         };
+    //
+    //         const writeFile = (uri: string) => {
+    //             window.resolveLocalFileSystemURL(uri, (fileEntry: any) => {
+    //                 fileEntry.createWriter((fileWriter: any) => {
+    //                     fileWriter.onwriteend = () => {
+    //                         alert('File was successfully exported.');
+    //                     };
+    //                     fileWriter.onerror = (e: any) => {
+    //                         console.error('Failed to save file:', e);
+    //                         alert('Failed to export file.');
+    //                     };
+    //                     fileWriter.write(blob);
+    //                 });
+    //             }, (error: any) => {
+    //                 console.error('Error accessing file:', error);
+    //                 alert('Failed to access file.');
+    //             });
+    //         };
+    //
+    //         if (window.cordova) {
+    //             document.addEventListener('deviceready', onDeviceReady, false);
+    //         } else {
+    //             onDeviceReady();
+    //         }
+    //     } catch (error) {
+    //         console.error('Detailed error:', error);
+    //         alert('An error occurred while exporting data from IndexedDB. Details: ' + error);
+    //     }
+    // };
+
+
+    const handleCopyIndexedDB = async () => {
         try {
+            console.log('Loading data from IndexedDB...');
             const allData = await loadAllData();
-            const jsonData = JSON.stringify(allData, null, 2);
-            const blob = new Blob([jsonData], { type: 'application/json' });
-            if (typeof URL !== 'undefined' && URL.createObjectURL) {
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'indexDb.json';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-            } else {
-                throw new Error('URL.createObjectURL is not available');
+            if (!allData) {
+                throw new Error('No data returned from IndexedDB');
             }
+            console.log('Converting data to JSON...');
+            const jsonData = JSON.stringify(allData, null, 2);
+
+            // Copy jsonData to the clipboard
+            await navigator.clipboard.writeText(jsonData);
         } catch (error) {
-            console.error('Error exporting data from IndexedDB:', error);
-            alert('An error occurred while exporting data from IndexedDB.');
+            console.error('Detailed error:', error);
+            // alert('An error occurred while copying data from IndexedDB. Details: ' + error);
         }
     };
 
@@ -342,7 +438,8 @@ const DragAndDropFormList: React.FC = () => {
                     <i className="icon-plus-circle"></i>
                     {currentTranslations.addNewNote}
                 </button>
-                <button className="notepad-export" onClick={handleExportIndexedDB}>Export note to json</button>
+                <button className="notepad-copy-json" onClick={handleCopyIndexedDB}>Copy json note</button>
+                {/*<button className="notepad-export" onClick={handleExportIndexedDB}>Export note to json</button>*/}
                 <button className="notepad-import"
                         onClick={() => document.getElementById('import-file-input')?.click()}>
                     Import note
