@@ -1,89 +1,23 @@
+// DragAndDropFormList.tsx
 import React, { useState, useEffect, ChangeEvent } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import {
+    DragDropContext,
+    Droppable,
+    Draggable,
+    DropResult,
+} from '@hello-pangea/dnd';
 import { translations } from '../elements/notepadSaveTranslations';
-
-declare global {
-    interface Window {
-        resolveLocalFileSystemURL(uri: string, successCallback: (entry: any) => void, errorCallback?: (error: any) => void): void;
-    }
-}
-
-declare global {
-    interface Window {
-        cordova: Cordova;
-    }
-}
-
-interface FormData {
-    id: number;
-    title: string;
-    description: string;
-    date: string;
-}
-
-const openDB = async (): Promise<IDBDatabase> => {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open('myDatabase', 1);
-
-        request.onupgradeneeded = (event) => {
-            const db = (event.target as IDBOpenDBRequest).result;
-            if (!db.objectStoreNames.contains('formData')) {
-                db.createObjectStore('formData', { keyPath: 'id', autoIncrement: true });
-            }
-        };
-
-        request.onsuccess = (event) => {
-            resolve((event.target as IDBOpenDBRequest).result);
-        };
-
-        request.onerror = (event) => {
-            reject((event.target as IDBOpenDBRequest).error);
-        };
-    });
-};
-
-const saveData = async (data: FormData): Promise<void> => {
-    const db = await openDB();
-    const transaction = db.transaction('formData', 'readwrite');
-    const store = transaction.objectStore('formData');
-    store.put(data);
-};
-
-const loadAllData = async (): Promise<FormData[]> => {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction('formData', 'readonly');
-        const store = transaction.objectStore('formData');
-        const request = store.getAll();
-
-        request.onsuccess = (event) => {
-            resolve((event.target as IDBRequest<FormData[]>).result);
-        };
-
-        request.onerror = (event) => {
-            reject((event.target as IDBRequest).error);
-        };
-    });
-};
-
-const deleteData = async (id: number): Promise<void> => {
-    const db = await openDB();
-    const transaction = db.transaction('formData', 'readwrite');
-    const store = transaction.objectStore('formData');
-    store.delete(id);
-};
-
-// Function to validate FormData
-const isValidFormData = (data: any): data is FormData => {
-    return (
-        typeof data === 'object' &&
-        data !== null &&
-        typeof data.id === 'number' &&
-        typeof data.title === 'string' &&
-        typeof data.description === 'string' &&
-        typeof data.date === 'string'
-    );
-};
+import NavButtons from './NavButtons';
+import {
+    openDB,
+    saveData,
+    loadAllData,
+    deleteData,
+    isValidFormData,
+    saveDataToStorage,
+    loadDataFromStorage,
+    FormData,
+} from '../elements/functions';
 
 const DragAndDropFormList: React.FC = () => {
     const [items, setItems] = useState<FormData[]>([]);
@@ -95,15 +29,14 @@ const DragAndDropFormList: React.FC = () => {
     const language: string = localStorage.getItem('notepadSaveLanguage') || 'en';
     const currentTranslations = translations[language] || translations.en;
 
-    // Function to save data to localStorage
-    const saveDataToStorage = (key: string, value: string): void => {
-        localStorage.setItem(key, value);
-    };
-
-    // Function to load data from localStorage
-    const loadDataFromStorage = (key: string): string | null => {
-        return localStorage.getItem(key);
-    };
+    useEffect(() => {
+        const fetchData = async () => {
+            const loadedData = await loadAllData();
+            const orderedData = loadOrderFromStorage(loadedData);
+            setItems(orderedData);
+        };
+        fetchData();
+    }, []);
 
     const saveOrderToStorage = (newOrder: FormData[]) => {
         const orderIds = newOrder.map((item) => item.id);
@@ -121,15 +54,6 @@ const DragAndDropFormList: React.FC = () => {
         }
         return loadedItems;
     };
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const loadedData = await loadAllData();
-            const orderedData = loadOrderFromStorage(loadedData);
-            setItems(orderedData);
-        };
-        fetchData();
-    }, []);
 
     const handleOnDragEnd = (result: DropResult) => {
         if (!result.destination) return;
@@ -180,7 +104,10 @@ const DragAndDropFormList: React.FC = () => {
         setTimeoutId(newTimeoutId);
     };
 
-    const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>, id: number) => {
+    const handleDescriptionChange = (
+        e: ChangeEvent<HTMLTextAreaElement>,
+        id: number
+    ) => {
         const newDescription = e.target.value;
         setItems((prevItems) =>
             prevItems.map((item) =>
@@ -253,135 +180,29 @@ const DragAndDropFormList: React.FC = () => {
         setConfirmRemoveId(id);
     };
 
-
-    // const requestPermissions = () => {
-    //     const permissions = (window as any).cordova.plugins.permissions;
-    //     const perms = [
-    //         permissions.WRITE_EXTERNAL_STORAGE,
-    //         permissions.READ_EXTERNAL_STORAGE
-    //     ];
-    //
-    //     permissions.requestPermissions(perms, (status: any) => {
-    //         if (!status.hasPermission) {
-    //             alert("Missing required permissions to write files.");
-    //         }
-    //     }, (error: any) => {
-    //         console.error("Error requesting permissions:", error);
-    //         alert("Failed to obtain permissions.");
-    //     });
-    // };
-
-    // const handleExportIndexedDB = async () => {
-    //     try {
-    //         console.log('Loading data from IndexedDB...');
-    //         const allData = await loadAllData();
-    //         if (!allData) {
-    //             throw new Error('No data returned from IndexedDB');
-    //         }
-    //
-    //         console.log('Converting data to JSON...');
-    //         const jsonData = JSON.stringify(allData, null, 2);
-    //         const blob = new Blob([jsonData], { type: 'application/json' });
-    //
-    //         const onDeviceReady = () => {
-    //             if (window.cordova) {
-    //                 requestPermissions();
-    //                 saveFile();
-    //             } else {
-    //                 console.log('Browser environment - Cordova functions are not available.');
-    //             }
-    //         };
-    //
-    //         const saveFile = () => {
-    //             const mimeType = 'application/json';
-    //             const fileName = 'data.json';
-    //
-    //             const intent = (window as any).cordova.plugins.intentShim;
-    //
-    //             intent.startActivityForResult(
-    //                 {
-    //                     action: intent.ACTION_CREATE_DOCUMENT,
-    //                     type: mimeType,
-    //                     extras: {
-    //                         'android.intent.extra.TITLE': fileName
-    //                     }
-    //                 },
-    //                 (result: any) => {
-    //                     if (result && result.data) {
-    //                         const uri = result.data;
-    //                         writeFile(uri);
-    //                     } else {
-    //                         alert('Failed to obtain file URI.');
-    //                     }
-    //                 },
-    //                 (error: any) => {
-    //                     console.error('Error creating document:', error);
-    //                     alert('Failed to create document.');
-    //                 }
-    //             );
-    //         };
-    //
-    //         const writeFile = (uri: string) => {
-    //             window.resolveLocalFileSystemURL(uri, (fileEntry: any) => {
-    //                 fileEntry.createWriter((fileWriter: any) => {
-    //                     fileWriter.onwriteend = () => {
-    //                         alert('File was successfully exported.');
-    //                     };
-    //                     fileWriter.onerror = (e: any) => {
-    //                         console.error('Failed to save file:', e);
-    //                         alert('Failed to export file.');
-    //                     };
-    //                     fileWriter.write(blob);
-    //                 });
-    //             }, (error: any) => {
-    //                 console.error('Error accessing file:', error);
-    //                 alert('Failed to access file.');
-    //             });
-    //         };
-    //
-    //         if (window.cordova) {
-    //             document.addEventListener('deviceready', onDeviceReady, false);
-    //         } else {
-    //             onDeviceReady();
-    //         }
-    //     } catch (error) {
-    //         console.error('Detailed error:', error);
-    //         alert('An error occurred while exporting data from IndexedDB. Details: ' + error);
-    //     }
-    // };
-
-
     const handleCopyIndexedDB = async () => {
         try {
-            console.log('Loading data from IndexedDB...');
             const allData = await loadAllData();
             if (!allData) {
                 throw new Error('No data returned from IndexedDB');
             }
-            console.log('Converting data to JSON...');
             const jsonData = JSON.stringify(allData, null, 2);
-
-            // Copy jsonData to the clipboard
             await navigator.clipboard.writeText(jsonData);
         } catch (error) {
             console.error('Detailed error:', error);
-            // alert('An error occurred while copying data from IndexedDB. Details: ' + error);
         }
     };
 
-    // Function to handle file change event
     const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             try {
                 const text = await file.text();
                 const importedData = JSON.parse(text);
-                // Validate the data format
                 if (!Array.isArray(importedData)) {
                     alert('Invalid data format: expected an array of notes.');
                     return;
                 }
-                // Validate each item
                 const validData: FormData[] = [];
                 for (const item of importedData) {
                     if (isValidFormData(item)) {
@@ -391,26 +212,24 @@ const DragAndDropFormList: React.FC = () => {
                         return;
                     }
                 }
-                // Get existing data to check for ID conflicts
                 const existingData = await loadAllData();
-                const existingIds = new Set(existingData.map(item => item.id));
-                // Adjust IDs if necessary
-                let maxExistingId = existingData.reduce((maxId, item) => Math.max(maxId, item.id), 0);
-                const newData = validData.map(item => {
+                const existingIds = new Set(existingData.map((item) => item.id));
+                let maxExistingId = existingData.reduce(
+                    (maxId, item) => Math.max(maxId, item.id),
+                    0
+                );
+                const newData = validData.map((item) => {
                     if (existingIds.has(item.id)) {
-                        // Adjust the ID
                         maxExistingId += 1;
                         return { ...item, id: maxExistingId };
                     } else {
                         return item;
                     }
                 });
-                // Save new items to IndexedDB
                 for (const item of newData) {
                     await saveData(item);
                 }
-                // Update the items state
-                setItems(prevItems => {
+                setItems((prevItems) => {
                     const updatedItems = [...prevItems, ...newData];
                     saveOrderToStorage(updatedItems);
                     return updatedItems;
@@ -420,7 +239,6 @@ const DragAndDropFormList: React.FC = () => {
                 console.error('Error importing data:', error);
                 alert('An error occurred while importing data.');
             } finally {
-                // Reset the file input
                 e.target.value = '';
             }
         }
@@ -428,29 +246,11 @@ const DragAndDropFormList: React.FC = () => {
 
     return (
         <div className={`notepad ${isDescriptionVisible ? 'notepad-single' : ''}`}>
-
-            <button title={currentTranslations.addNewNote} className="notepad-add-new-note notepad-add-new-note--fixed" onClick={handleAddNewItem}>
-                <i className="icon-plus-circle"></i>
-            </button>
-            <div className="notepad-submenu">
-                <button title={currentTranslations.addNewNote} className="notepad-add-new-note"
-                        onClick={handleAddNewItem}>
-                    <i className="icon-plus-circle"></i>
-                    {currentTranslations.addNewNote}
-                </button>
-                <button className="notepad-copy-json" onClick={handleCopyIndexedDB}>Copy json note</button>
-                {/*<button className="notepad-export" onClick={handleExportIndexedDB}>Export note to json</button>*/}
-                <button className="notepad-import"
-                        onClick={() => document.getElementById('import-file-input')?.click()}>
-                    Import note
-                </button>
-            </div>
-            <input
-                type="file"
-                id="import-file-input"
-                accept="application/json"
-                style={{display: 'none'}}
-                onChange={handleFileChange}
+            <NavButtons
+                handleAddNewItem={handleAddNewItem}
+                handleCopyIndexedDB={handleCopyIndexedDB}
+                handleFileChange={handleFileChange}
+                currentTranslations={currentTranslations}
             />
             <DragDropContext onDragEnd={handleOnDragEnd}>
                 <Droppable droppableId="droppable">
@@ -469,7 +269,9 @@ const DragAndDropFormList: React.FC = () => {
                                     {(provided) => (
                                         <li
                                             className={`notepad-item ${
-                                                String(visibleDescriptions) === String(item.id) ? 'notepad-active-item' : ''
+                                                String(visibleDescriptions) === String(item.id)
+                                                    ? 'notepad-active-item'
+                                                    : ''
                                             }`}
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
@@ -477,15 +279,15 @@ const DragAndDropFormList: React.FC = () => {
                                             <div
                                                 className="notepad-item-move"
                                                 {...provided.dragHandleProps}
-                                                style={{cursor: 'grab'}}
+                                                style={{ cursor: 'grab' }}
                                             >
                                                 <i className="icon-move"></i>
                                                 {currentTranslations.move}
-
                                                 <p className="notepad-item-date">{item.date}</p>
                                             </div>
                                             <div className="notepad-options">
-                                                {String(visibleDescriptions) === String(item.id) ? (
+                                                {String(visibleDescriptions) ===
+                                                String(item.id) ? (
                                                     <>
                                                         <button
                                                             onClick={() =>
@@ -516,11 +318,17 @@ const DragAndDropFormList: React.FC = () => {
                                                 {confirmRemoveId === item.id ? (
                                                     <div className="notepad-modal-remove">
                                                         <div className="notepad-modal-remove__container">
-                                                            <p>{currentTranslations.confirmNoteDeletion}</p>
+                                                            <p>
+                                                                {
+                                                                    currentTranslations.confirmNoteDeletion
+                                                                }
+                                                            </p>
                                                             <div className="notepad-modal-remove__row">
                                                                 <button
                                                                     onClick={() => {
-                                                                        hideDescription(String(item.id));
+                                                                        hideDescription(
+                                                                            String(item.id)
+                                                                        );
                                                                         handleRemoveItem(item.id);
                                                                     }}
                                                                 >
@@ -528,7 +336,9 @@ const DragAndDropFormList: React.FC = () => {
                                                                     {currentTranslations.pleaseRemove}
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => setConfirmRemoveId(null)}
+                                                                    onClick={() =>
+                                                                        setConfirmRemoveId(null)
+                                                                    }
                                                                 >
                                                                     <i className="icon-cancel-alt-filled"></i>
                                                                     {currentTranslations.cancel}
@@ -549,14 +359,22 @@ const DragAndDropFormList: React.FC = () => {
                                                 )}
                                             </div>
 
-                                            {(!(String(visibleDescriptions) !== String(item.id) && (item.title === ''))) &&
+                                            {!(
+                                                String(visibleDescriptions) !== String(item.id) &&
+                                                item.title === ''
+                                            ) && (
                                                 <input
                                                     type="text"
                                                     value={item.title}
-                                                    onChange={(e) => handleTitleChange(e, item.id)}
+                                                    onChange={(e) =>
+                                                        handleTitleChange(e, item.id)
+                                                    }
                                                     placeholder="Enter title"
-                                                    onClick={() => showDescription(String(item.id))}
-                                                />}
+                                                    onClick={() =>
+                                                        showDescription(String(item.id))
+                                                    }
+                                                />
+                                            )}
 
                                             {visibleDescriptions === String(item.id) ? (
                                                 <textarea
@@ -567,19 +385,30 @@ const DragAndDropFormList: React.FC = () => {
                                                     placeholder="Enter description"
                                                 ></textarea>
                                             ) : (
-                                                ((item.title === '') && !(String(visibleDescriptions) !== String(item.id) && (item.description === ''))) &&
-                                                <input
-                                                    type="text"
-                                                    readOnly
-                                                    value={
-                                                        item.description.length > 40
-                                                            ? `${item.description.substring(0, 40)}...`
-                                                            : item.description
-                                                    }
-                                                    placeholder="Enter description"
-                                                    onClick={() => showDescription(String(item.id))}
-                                                />
-                                                )}
+                                                item.title === '' &&
+                                                !(
+                                                    String(visibleDescriptions) !==
+                                                    String(item.id) &&
+                                                    item.description === ''
+                                                ) && (
+                                                    <input
+                                                        type="text"
+                                                        readOnly
+                                                        value={
+                                                            item.description.length > 40
+                                                                ? `${item.description.substring(
+                                                                    0,
+                                                                    40
+                                                                )}...`
+                                                                : item.description
+                                                        }
+                                                        placeholder="Enter description"
+                                                        onClick={() =>
+                                                            showDescription(String(item.id))
+                                                        }
+                                                    />
+                                                )
+                                            )}
                                         </li>
                                     )}
                                 </Draggable>
