@@ -2,7 +2,7 @@ export const translations: Record<string, Record<string, string>> = {
     en: {
         welcomeMessage: 'Welcome To the Language page',
         currentLanguage: 'Current Language',
-        addNewNote: 'Add new note',
+        addNewNote: 'Add note',
         edit: 'Edit',
         cancel: 'Cancel',
         move: 'Move',
@@ -16,7 +16,7 @@ export const translations: Record<string, Record<string, string>> = {
     pl: {
         welcomeMessage: 'Witamy na stronie językowej',
         currentLanguage: 'Aktualny język',
-        addNewNote: 'Dodaj nową notatkę',
+        addNewNote: 'Dodaj notatkę',
         edit: 'Edytuj',
         cancel: 'Anuluj',
         move: 'Przenieś',
@@ -29,7 +29,7 @@ export const translations: Record<string, Record<string, string>> = {
     id: {
         welcomeMessage: 'Selamat Datang di halaman Bahasa',
         currentLanguage: 'Bahasa Saat Ini',
-        addNewNote: 'Tambahkan catatan baru',
+        addNewNote: 'Tambahkan catatan',
         edit: 'Sunting',
         cancel: 'Membatalkan',
         move: 'Bergerak',

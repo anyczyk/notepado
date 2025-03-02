@@ -5,11 +5,16 @@
   "description": "A sample Apache Cordova application that responds to the deviceready event.",
   "main": "webpack.config.js",
   "scripts": {
+    "cordova-platform-add-android": "cordova platform add android",
     "build": "webpack --mode production",
     "build-cordova": "webpack --mode production && cordova build android",
     "build-all": "npm run build && npm run build-cordova",
+    "build-all-prod": "webpack --mode production && cordova build android --release --buildConfig=build.json",
     "start": "webpack serve --mode development",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "update-translations": "node updateTranslations.js",
+    "run-in-smartphone": "cordova run android --device",
+    "copy-and-overwrite": "node copy.js uk.json uk-en-irregular-verbs-full.json frontDesc"
   },
   "keywords": [
     "ecosystem:cordova"
@@ -17,12 +22,23 @@
   "author": "Apache Cordova Team",
   "license": "Apache-2.0",
   "dependencies": {
+    "i18next": "^24.1.0",
+    "i18next-browser-languagedetector": "^8.0.2",
     "@hello-pangea/dnd": "^17.0.0",
     "js-cookie": "^3.0.5",
     "lodash": "^4.17.21",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "styled-components": "^6.1.13"
+    "react-i18next": "^15.1.4",
+    "styled-components": "^6.1.13",
+    "react-router-dom": "^7.0.2",
+    "@ionic/core": "^8.4.3",
+    "@react-spring/web": "^9.7.5",
+    "com.plugin.cordova.admobplugincustom": "file:cordova-admob-plugin-custom",
+    "framer-motion": "^11.14.4",
+    "idb": "^8.0.0",
+    "prop-types": "^15.8.1",
+    "react-flagkit": "^2.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -50,7 +66,21 @@
     "typescript": "^5.6.2",
     "webpack": "^5.94.0",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.1.0"
+    "webpack-dev-server": "^5.1.0",
+    "copy-webpack-plugin": "^12.0.2",
+    "cordova-admob-plugin-custom": "file:cordova-admob-plugin-custom",
+    "cordova-plugin-console": "^1.1.0",
+    "cordova-plugin-filepath": "^1.6.0",
+    "cordova-plugin-globalization": "^1.11.0",
+    "cordova-plugin-insomnia": "^4.3.0",
+    "cordova-plugin-navigationbar-color": "^0.1.0",
+    "cordova-plugin-purchase": "^13.12.1",
+    "cordova-plugin-splashscreen": "^6.0.1",
+    "cordova-plugin-statusbar": "^4.0.0",
+    "cordova-plugin-tts-advanced": "^0.5.3",
+    "cordova-plugin-x-socialsharing": "^6.0.4",
+    "es6-promise-plugin": "^4.2.2",
+    "xml2js": "^0.6.2"
   },
   "cordova": {
     "platforms": [
@@ -63,7 +93,11 @@
       "cordova-plugin-android-permissions": {},
       "cordova-plugin-simple-file-chooser": {},
       "cordova-plugin-filechooser": {},
-      "cordova-plugin-documentpicker": {}
+      "cordova-plugin-documentpicker": {},
+      "cordova-plugin-x-socialsharing": {},
+      "cordova-plugin-purchase": {},
+      "cordova-plugin-statusbar": {},
+      "cordova-plugin-console": {}
     }
   }
 }

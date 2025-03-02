@@ -1,14 +1,17 @@
 // functions.ts
+
 export interface FormData {
     id: number;
     title: string;
     description: string;
-    date: string;
+    creationDate: string;
+    lastModifiedDate: string;
+    bgColor: string;
 }
 
 export const openDB = async (): Promise<IDBDatabase> => {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open('myDatabase', 1);
+        const request = indexedDB.open('notepadoData', 1);
 
         request.onupgradeneeded = (event) => {
             const db = (event.target as IDBOpenDBRequest).result;
@@ -65,7 +68,8 @@ export const isValidFormData = (data: any): data is FormData => {
         typeof data.id === 'number' &&
         typeof data.title === 'string' &&
         typeof data.description === 'string' &&
-        typeof data.date === 'string'
+        typeof data.creationDate === 'string'
+        // typeof data.bgColor === 'string'
     );
 };
 

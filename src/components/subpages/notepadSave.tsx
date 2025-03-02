@@ -3,7 +3,7 @@ import DragAndDropFormList from "../parts/DragAndDropFormList";
 
 const NotePadSave: React.FC = () => {
     return (
-        <div className="notepade-save-container">
+        <div className="o-save-container">
             <DragAndDropFormList />
         </div>
     );

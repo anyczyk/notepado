@@ -21,8 +21,8 @@ const Footer: React.FC = () => {
     }, []);
 
     return (
-        <footer>
-            <p>&copy; Semdesign - {platform}</p>
+        <footer className="o-main-footer">
+            <p>&copy; semDesign Notepado v1.0.0 ({platform})</p>
         </footer>
     );
 };
