@@ -31,6 +31,7 @@
 $main-gap: 8px;
 $height-header: 56px;
 $height-footer: 56px;
+$height-admob-banner: 50px;
 
 * {
   padding: 0;
@@ -82,8 +83,20 @@ button,
 
   &--checked-all {
     min-width: 44px;
+    font-size: 12px;
+    white-space: nowrap;
+
+    span {
+      display: inline-block;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 105px;
+    }
     
     &:active {
+      background-color: transparent;
       i {
         background-color: transparent;
         color: var(--color-white);
@@ -176,6 +189,7 @@ button,
 
   button {
     background-color: transparent; // var(--color-white-opacity-10);
+    box-shadow: none;
   }
 
   h1 {
@@ -373,6 +387,18 @@ button,
   padding-right: $main-gap;
   background-color: var(--color-black);
 
+  &__select-sort {
+    position: absolute;
+    top: calc(100% + $main-gap);
+    border: 1px solid var(--color-black);
+    border-top: none;
+    box-shadow: 0 0 3px var(--color-white-opacity-10);
+    max-width: 100%;
+    left: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
   .o-sub-buttons {
     padding-top: $main-gap;
     padding-bottom: $main-gap;
@@ -422,10 +448,6 @@ button,
   translate: -50% 0;
 }
 
-
-
-
-
 .o-main-content {
   padding-left: $main-gap;
   padding-right: $main-gap;
@@ -445,8 +467,8 @@ button,
     .o-save-container {
       height: 100%;
 
-      textarea {
-        height: 100%;
+      .o-editor__main {
+        height: calc(100% - 32px);
       }
     }
 
@@ -476,7 +498,7 @@ button,
   color: white;
 }
 
-input[type=text], input[type=search], textarea, select {
+input[type=text], input[type=search], .o-editor__main, select {
   background-color: var(--color-white-opacity-10);
   color: var(--color-white);
   border: none;
@@ -526,12 +548,18 @@ input[type=search] {
   select {
     width: 100%;
   }
-  input[type=text], textarea {
+  input[type=text], .o-editor__main {
     display: block;
     width: 100%;
+  }
+
+  input[type=text] {
     margin-top: $main-gap;
   }
-  textarea {
+  .o-editor {
+    margin-top: $main-gap;
+  }
+  .o-editor__main, .o-editor {
     min-height: 200px;
   }
 
@@ -767,4 +795,37 @@ input[type=search] {
     height: calc(2 * #{$main-gap} + 2px);
     cursor: pointer;
   }
+}
+
+.o-banner-visible {
+  .o-main-header {
+    top: $height-admob-banner;
+
+    &::before {
+      content: '';
+      display: block;
+      background-color: var(--color-dark);
+      position: fixed;
+      height: $height-admob-banner;
+      left: 0;
+      right: 0;
+      top: -50px;
+    }
+  }
+  .o-sub-nav {
+    top: calc(56px + $height-admob-banner);
+  }
+  .o-main-content {
+
+    padding-top: calc($height-header + $main-gap + $height-admob-banner);
+
+    &:not(.o-main-content--single) {
+      padding-top: calc(2 * #{$height-footer} + $height-admob-banner);
+    }
+
+  }
+}
+
+.o-editor {
+  height: 100%;
 }

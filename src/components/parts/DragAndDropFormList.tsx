@@ -6,6 +6,7 @@ import React, {
     ChangeEvent,
     useContext,
 } from 'react';
+import dataExport from "../../utils/dataExport";
 import { NotepadoContext } from '../../context/NotepadoContext';
 import { useTranslation } from 'react-i18next';
 
@@ -65,7 +66,7 @@ const DragAndDropFormList: React.FC = () => {
         selectSort,
         setShowSearch,
         setSearchTerm,
-        setSelectSort,
+        setSelectSort
     } = useContext(NotepadoContext);
 
     // Lista notatek
@@ -95,6 +96,13 @@ const DragAndDropFormList: React.FC = () => {
                 !target.closest('.o-color-picker')
             ) {
                 setActiveColorButtons({});
+            }
+
+            if (
+                !target.closest('.o-sort') &&
+                !target.closest('.o-sub-nav__select-sort')
+            ) {
+                setSelectSort(false);
             }
         };
 
@@ -498,16 +506,25 @@ const DragAndDropFormList: React.FC = () => {
 
         switch (action) {
             case 'export-checked': {
-                const jsonString = JSON.stringify(selectedItems, null, 2);
-                const blob = new Blob([jsonString], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `notes-export-${Date.now()}.json`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
+                try {
+                    await dataExport(selectedItems);
+                } catch (error) {
+                    console.error(t('export_error'), error);
+                    alert(t('export_errror'));
+                }
+                // if(window.cordova) {
+                // } else {
+                //     const jsonString = JSON.stringify(selectedItems, null, 2);
+                //     const blob = new Blob([jsonString], { type: 'application/json' });
+                //     const url = URL.createObjectURL(blob);
+                //     const link = document.createElement('a');
+                //     link.href = url;
+                //     link.download = `notes-export-${Date.now()}.json`;
+                //     document.body.appendChild(link);
+                //     link.click();
+                //     document.body.removeChild(link);
+                //     URL.revokeObjectURL(url);
+                // }
                 break;
             }
             case 'copy-checked': {
@@ -559,28 +576,31 @@ const DragAndDropFormList: React.FC = () => {
                                 areAllSelected={areAllSelected}
                                 onSelectAllToggle={handleSelectAll}
                                 onSelectAction={handleSelectAction}
+                                selectSort={selectSort}
+                                currentSort={currentSort}
+                                setCurrentSort={setCurrentSort}
                             />
-                            {(selectSort && (filteredItems.length > 0)) && (
-                                <select
-                                    className="o-bg-dark-gray"
-                                    value={currentSort}
-                                    onChange={(e) => setCurrentSort(e.target.value)}
-                                >
-                                    <option value="my-sort">Mój sort</option>
-                                    <option value="by-date-added-from-newest">
-                                        Wg daty dodania od najnowszego
-                                    </option>
-                                    <option value="by-date-added-from-oldest">
-                                        Wg daty dodania od najstarszego
-                                    </option>
-                                    <option value="by-update-date-from-newest">
-                                        Wg daty aktualizacji od najnowszego
-                                    </option>
-                                    <option value="by-update-date-from-oldest">
-                                        Wg daty aktualizacji od najstarszego
-                                    </option>
-                                </select>
-                            )}
+                            {/*{(selectSort && (filteredItems.length > 0)) && (*/}
+                            {/*    <select*/}
+                            {/*        className="o-bg-dark-gray o-sub-nav__select-sort"*/}
+                            {/*        value={currentSort}*/}
+                            {/*        onChange={(e) => setCurrentSort(e.target.value)}*/}
+                            {/*    >*/}
+                            {/*        <option value="my-sort">Mój sort</option>*/}
+                            {/*        <option value="by-date-added-from-newest">*/}
+                            {/*            Wg daty dodania od najnowszego*/}
+                            {/*        </option>*/}
+                            {/*        <option value="by-date-added-from-oldest">*/}
+                            {/*            Wg daty dodania od najstarszego*/}
+                            {/*        </option>*/}
+                            {/*        <option value="by-update-date-from-newest">*/}
+                            {/*            Wg daty aktualizacji od najnowszego*/}
+                            {/*        </option>*/}
+                            {/*        <option value="by-update-date-from-oldest">*/}
+                            {/*            Wg daty aktualizacji od najstarszego*/}
+                            {/*        </option>*/}
+                            {/*    </select>*/}
+                            {/*)}*/}
                         </div>
                     </>
                 )}
@@ -818,13 +838,21 @@ const DragAndDropFormList: React.FC = () => {
                                                 )}
 
                                                 {visibleDescriptions === String(item.id) ? (
-                                                    <textarea
-                                                        value={item.description}
-                                                        onChange={(e) =>
-                                                            handleDescriptionChange(e, item.id)
-                                                        }
-                                                        placeholder="Enter description"
-                                                    ></textarea>
+                                                    <div className="o-editor">
+                                                        <textarea
+                                                            className="o-editor__main"
+                                                            value={item.description}
+                                                            onChange={(e) =>
+                                                                handleDescriptionChange(e, item.id)
+                                                            }
+                                                            placeholder="Enter description"
+                                                        ></textarea>
+                                                        <div className="o-editor__buttons">
+                                                            <button>b</button>
+                                                            <button>i</button>
+                                                            <button>u</button>
+                                                        </div>
+                                                    </div>
                                                 ) : (
                                                     item.title === '' &&
                                                     item.description !== '' && (

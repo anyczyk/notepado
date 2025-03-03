@@ -1,17 +1,17 @@
 const AdMobPluginCustom = {
     // Inicjalizacja SDK (raz, np. zaraz po starcie aplikacji)
-    initializeAdMob: function(successCallback, errorCallback) {
+    initializeAdMob: function (successCallback, errorCallback) {
         cordova.exec(
             successCallback,
             errorCallback,
-            "AdMobPluginCustom", // nazwa "service" (z <feature name="AdMobPluginCustom">)
-            "initializeAdMob",   // nazwa metody w Java
+            "AdMobPluginCustom",
+            "initializeAdMob",
             []
         );
     },
 
     // Ładowanie reklamy pełnoekranowej (interstitial)
-    loadInterstitial: function(successCallback, errorCallback) {
+    loadInterstitial: function (successCallback, errorCallback) {
         cordova.exec(
             successCallback,
             errorCallback,
@@ -22,12 +22,34 @@ const AdMobPluginCustom = {
     },
 
     // Wyświetlenie załadowanej reklamy pełnoekranowej
-    showInterstitial: function(successCallback, errorCallback) {
+    showInterstitial: function (successCallback, errorCallback) {
         cordova.exec(
             successCallback,
             errorCallback,
             "AdMobPluginCustom",
             "showInterstitial",
+            []
+        );
+    },
+
+    // [NEW] Wyświetlenie banera
+    showBanner: function (successCallback, errorCallback) {
+        cordova.exec(
+            successCallback,
+            errorCallback,
+            "AdMobPluginCustom",
+            "showBanner",
+            []
+        );
+    },
+
+    // [NEW] Ukrycie banera
+    hideBanner: function (successCallback, errorCallback) {
+        cordova.exec(
+            successCallback,
+            errorCallback,
+            "AdMobPluginCustom",
+            "hideBanner",
             []
         );
     }

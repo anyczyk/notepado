@@ -34,7 +34,7 @@
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <meta-data
                     android:name="com.google.android.gms.ads.APPLICATION_ID"
-                    android:value="ca-app-pub-4263972941440160~3007691342" />
+                    android:value="ca-app-pub-4263972941440160~6103623353" />
         </config-file>
     </platform>
 </plugin>

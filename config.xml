@@ -21,6 +21,7 @@
     <preference name="AutoHideSplashScreen" value="true" />
     <preference name="SplashScreenDelay" value="3000" />
     <preference name="FadeSplashScreen" value="false" />
+    <preference name="FadeSplashScreenDuration" value="500" />
     <preference name="ShowSplashScreenSpinner" value="false" />
     <preference name="AndroidPlayBillingMode" value="billingv6" />
     <preference name="Billing" value="true" />
@@ -33,6 +34,7 @@
     <plugin name="cordova-plugin-purchase" spec="^13.12.1" />
     <plugin name="cordova-plugin-statusbar" spec="^2.4.3" />
     <plugin name="cordova-plugin-console" source="npm" spec="^1.1.0" />
+    <plugin name="AdMobPluginCustom" spec="file:cordova-admob-plugin-custom" />
     <platform name="android">
         <preference name="android-minSdkVersion" value="26" />
         <config-file parent="/*" target="AndroidManifest.xml">
@@ -93,6 +95,6 @@
         <resource-file src="resources/android/icon/mipmap-xxhdpi/ic_launcher_foreground.png" target="app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png" />
         <resource-file src="resources/android/icon/mipmap-xxxhdpi/ic_launcher_foreground.png" target="app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png" />
 
-        <preference name="AndroidWindowSplashScreenAnimatedIcon" value="resources/splashscreen.png" />
+        <preference name="AndroidWindowSplashScreenAnimatedIcon" value="resources/splash.png" />
     </platform>
 </widget>
