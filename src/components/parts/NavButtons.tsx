@@ -81,7 +81,6 @@ const NavButtons: React.FC<NavButtonsProps> = ({
 
 
                     {(filteredItems.length > 0) && <>
-
                         <button
                             className={`o-btn--icon o-sort ${selectSort ? 'o-bg-dark-gray' : ''}`}
                             onClick={() => {

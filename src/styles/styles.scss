@@ -4,6 +4,7 @@
   --color-gray-dark: #333;
   --color-white: #fff;
   --color-red: #b42916;
+  --color-red-alpha: rgba(180,41,22,.9);
   --color-green: #005d00;
   --color-defeult-btn: #c07c00;
 
@@ -76,6 +77,10 @@ button,
   cursor: pointer;
   overflow: hidden;
 
+  &--strike {
+    text-decoration: line-through;
+  }
+
   &:active {
     background-color: var(--color-white);
     color: var(--color-dark); // var(--color-defeult-btn);
@@ -115,6 +120,10 @@ button,
     span {
       font-size: 10px;
     }
+  }
+
+  &--active {
+    background-color: var(--color-white-opacity-20) !important; // var(--color-defeult-btn);
   }
 }
 
@@ -468,7 +477,17 @@ button,
       height: 100%;
 
       .o-editor__main {
-        height: calc(100% - 32px);
+        height: calc(100% - 44px);
+      }
+
+      .o-editor__main:empty::before {
+        content: "Enter text...";
+        color: #999; /* lub inny kolor placeholdera */
+        pointer-events: none;
+        opacity: .5;
+      }
+      .o-editor__main:empty:focus::before {
+        content: "";
       }
     }
 
@@ -537,7 +556,7 @@ input[type=search] {
 }
 
 .o-btn-remove {
-  background-color: var(--color-red);
+  background-color: var(--color-red-alpha);
 }
 
 .o-btn-save {
@@ -560,7 +579,8 @@ input[type=search] {
     margin-top: $main-gap;
   }
   .o-editor__main, .o-editor {
-    min-height: 200px;
+    min-height: 150px;
+    overflow-y: auto;
   }
 
   .o-btn-remove {
@@ -722,7 +742,7 @@ input[type=search] {
     }
     &__container {
       max-width: 250px;
-      background-color: var(--color-black);
+      background-color: var(--color-gray-dark) !important;
       border-radius: 10px;
       margin-top: auto;
       margin-bottom: auto;
@@ -826,6 +846,34 @@ input[type=search] {
   }
 }
 
+.o-item {
+  button:not(.o-btn-remove) {
+    background-color: var(--color-black-opacity-30);
+  }
+}
+
 .o-editor {
   height: 100%;
+  &__buttons {
+    padding-top: $main-gap;
+    display: flex;
+    gap: $main-gap;
+
+    button {
+      width: 36px;
+      user-select: none;
+    }
+
+    .o-btn--undo {
+      width: auto;
+
+      &[disabled] {
+        opacity: .3 !important;
+        pointer-events: none;
+      }
+      &[disabled]:active {
+        background-color: var(--color-black-opacity-30) !important;
+      }
+    }
+  }
 }

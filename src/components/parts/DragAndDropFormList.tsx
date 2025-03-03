@@ -1,10 +1,9 @@
-// DragAndDropFormList.tsx
-
 import React, {
     useState,
     useEffect,
     ChangeEvent,
     useContext,
+    useRef
 } from 'react';
 import dataExport from "../../utils/dataExport";
 import { NotepadoContext } from '../../context/NotepadoContext';
@@ -27,6 +26,7 @@ import {
     FormData,
 } from '../elements/functions';
 
+/** Parsowanie dat w formacie dd.mm.yyyy HH:MM:SS (np. "03.03.2023 12:15:30"). */
 const parsePolishDateString = (dateStr?: string): number => {
     if (!dateStr) {
         console.warn('parsePolishDateString: brak daty');
@@ -57,6 +57,8 @@ const getSortableUpdateDate = (item: FormData): number => {
 
 const DragAndDropFormList: React.FC = () => {
     const { t } = useTranslation();
+
+    // Z kontekstu:
     const {
         searchTerm,
         isDescriptionVisible,
@@ -69,25 +71,43 @@ const DragAndDropFormList: React.FC = () => {
         setSelectSort
     } = useContext(NotepadoContext);
 
-    // Lista notatek
+    // -------------------- STANY -------------------- //
     const [items, setItems] = useState<FormData[]>([]);
-    // Lista notatek po filtrze i sortowaniu
     const [filteredItems, setFilteredItems] = useState<FormData[]>([]);
-    // ID notatki, którą chcemy usunąć (potwierdzenie)
+
     const [confirmRemoveId, setConfirmRemoveId] = useState<number | null>(null);
-    // Obiekt z timerami do debounce (klucz = id notatki)
     const [saveTimers, setSaveTimers] = useState<{ [key: number]: NodeJS.Timeout }>({});
-    // Aktualnie wybrany sposób sortowania
+
     const [currentSort, setCurrentSort] = useState<string>('my-sort');
-    // Stan przechowujący aktywność przycisku zmiany koloru (klucz = id notatki)
     const [activeColorButtons, setActiveColorButtons] = useState<{ [id: number]: boolean }>({});
 
-    // [FOCUS] ID notatki, której pole tytułu chcemy sfokusować
     const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
 
-    // [SELECTION] Tablica z zaznaczonymi ID
+    // Zaznaczone checkboxy (selektory zaznaczenia):
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
+    // Lokalna historia (stos) dla każdego item.id
+    const [undoHistories, setUndoHistories] = useState<{ [id: number]: string[] }>({});
+
+    const editorRef = useRef<HTMLDivElement | null>(null);
+
+    // Stan przycisków formatowania (b/i/u/strikethrough):
+    const [formatState, setFormatState] = useState({
+        bold: false,
+        italic: false,
+        underline: false,
+        strikethrough: false,
+    });
+
+    /**
+     * Poziom rozmiaru fontu 1..7
+     * Domyślnie 3 (mniej więcej "środkowy" w staromodnej skali).
+     */
+    const [fontSizeLevel, setFontSizeLevel] = useState<number>(3);
+
+    // -------------------- HOOKI -------------------- //
+
+    /** Zamykamy color-picker, sort itp. przy kliknięciu poza. */
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
@@ -97,7 +117,6 @@ const DragAndDropFormList: React.FC = () => {
             ) {
                 setActiveColorButtons({});
             }
-
             if (
                 !target.closest('.o-sort') &&
                 !target.closest('.o-sub-nav__select-sort')
@@ -112,7 +131,7 @@ const DragAndDropFormList: React.FC = () => {
         };
     }, []);
 
-    // Ładowanie danych i kolejności z IndexedDB oraz localStorage
+    /** Ładujemy notatki z IndexedDB + kolejność z localStorage. */
     useEffect(() => {
         const fetchData = async () => {
             const loadedData = await loadAllData();
@@ -123,6 +142,7 @@ const DragAndDropFormList: React.FC = () => {
         fetchData();
     }, []);
 
+    /** Filtrowanie i sortowanie przy zmianie items/searchTerm/currentSort. */
     useEffect(() => {
         let newFiltered = [...items];
 
@@ -160,17 +180,22 @@ const DragAndDropFormList: React.FC = () => {
                     (a, b) => getSortableUpdateDate(a) - getSortableUpdateDate(b)
                 );
                 break;
-            // "my-sort" – nie zmieniamy kolejności
+            default:
+            // my-sort – nie sortujemy
         }
 
         setFilteredItems(newFiltered);
     }, [items, searchTerm, currentSort]);
 
+    // -------------------- FUNKCJE POMOCNICZE -------------------- //
+
+    /** Zapis kolejności do localStorage. */
     const saveOrderToStorage = (newOrder: FormData[]) => {
         const orderIds = newOrder.map((item) => item.id);
         saveDataToStorage('itemOrder', JSON.stringify(orderIds));
     };
 
+    /** Odczyt kolejności z localStorage i narzucenie notatkom. */
     const loadOrderFromStorage = (loadedItems: FormData[]): FormData[] => {
         const savedOrder = loadDataFromStorage('itemOrder');
         if (savedOrder) {
@@ -186,6 +211,7 @@ const DragAndDropFormList: React.FC = () => {
         return loadedItems;
     };
 
+    /** Obsługa drag&drop. */
     const handleOnDragEnd = (result: DropResult) => {
         if (!result.destination) return;
         if (currentSort !== 'my-sort') {
@@ -193,21 +219,19 @@ const DragAndDropFormList: React.FC = () => {
         }
 
         const reorderedItems = Array.from(filteredItems);
-        const [reorderedItem] = reorderedItems.splice(result.source.index, 1);
-        reorderedItems.splice(result.destination.index, 0, reorderedItem);
-
+        const [moved] = reorderedItems.splice(result.source.index, 1);
+        reorderedItems.splice(result.destination.index, 0, moved);
         setFilteredItems(reorderedItems);
 
         setItems((prevItems) => {
-            const updatedItems = prevItems.filter(
-                (item) => item.id !== reorderedItem.id
-            );
-            updatedItems.splice(result.destination.index, 0, reorderedItem);
+            const updatedItems = prevItems.filter((it) => it.id !== moved.id);
+            updatedItems.splice(result.destination.index, 0, moved);
             saveOrderToStorage(updatedItems);
             return updatedItems;
         });
     };
 
+    /** Dodanie nowej notatki. */
     const handleAddNewItem = async () => {
         const now = new Date().toLocaleString('pl-PL', {
             day: '2-digit',
@@ -225,12 +249,19 @@ const DragAndDropFormList: React.FC = () => {
             lastModifiedDate: now,
             bgColor: 'o-bg-default',
         };
-        setItems((prevItems) => [newItem, ...prevItems]);
-        setFilteredItems((prevFiltered) => [newItem, ...prevFiltered]);
+        setItems((prev) => [newItem, ...prev]);
+        setFilteredItems((prev) => [newItem, ...prev]);
 
+        // Pokaż edytor od razu
         setVisibleDescriptions(String(newItem.id));
         setIsDescriptionVisible(true);
         setFocusedItemId(newItem.id);
+
+        // Inicjuj historię (undo) dla nowej notatki z tekstem bazowym (pustym)
+        setUndoHistories((prev) => ({
+            ...prev,
+            [newItem.id]: [newItem.description],
+        }));
     };
 
     const handleAddNewItemAll = () => {
@@ -239,50 +270,105 @@ const DragAndDropFormList: React.FC = () => {
         setShowSearch(false);
     };
 
+    /** Debounce zapisu notatki w IndexedDB. */
     const scheduleSaveItem = (id: number) => {
         if (saveTimers[id]) {
             clearTimeout(saveTimers[id]);
         }
         const newTimer = setTimeout(() => handleSaveItem(id), 500);
-        setSaveTimers((prev) => ({
-            ...prev,
-            [id]: newTimer,
-        }));
+        setSaveTimers((prev) => ({ ...prev, [id]: newTimer }));
     };
 
+    /** Zmiana tytułu (input). */
     const handleTitleChange = (e: ChangeEvent<HTMLInputElement>, id: number) => {
         const newTitle = e.target.value;
-        setItems((prevItems) =>
-            prevItems.map((item) =>
-                item.id === id ? { ...item, title: newTitle } : item
+        setItems((prev) =>
+            prev.map((it) =>
+                it.id === id ? { ...it, title: newTitle } : it
             )
         );
-        setFilteredItems((prevItems) =>
-            prevItems.map((item) =>
-                item.id === id ? { ...item, title: newTitle } : item
+        setFilteredItems((prev) =>
+            prev.map((it) =>
+                it.id === id ? { ...it, title: newTitle } : it
             )
         );
         scheduleSaveItem(id);
     };
 
-    const handleDescriptionChange = (
-        e: ChangeEvent<HTMLTextAreaElement>,
-        id: number
+    /** Zmiana opisu w edytorze (przechowywana w item.description). */
+    const handleDescriptionChange = (newDescription: string, id: number) => {
+        setItems((prev) =>
+            prev.map((it) =>
+                it.id === id ? { ...it, description: newDescription } : it
+            )
+        );
+        setFilteredItems((prev) =>
+            prev.map((it) =>
+                it.id === id ? { ...it, description: newDescription } : it
+            )
+        );
+        scheduleSaveItem(id);
+    };
+
+    /**
+     * Funkcja odświeżająca stan przycisków b/i/u/strikethrough
+     * i wykrywająca rozmiar fontu.
+     */
+    const updateActiveButtons = () => {
+        setFormatState({
+            bold: document.queryCommandState('bold'),
+            italic: document.queryCommandState('italic'),
+            underline: document.queryCommandState('underline'),
+            strikethrough: document.queryCommandState('strikeThrough'),
+        });
+
+        // Wczytanie rozmiaru:
+        const sizeStr = document.queryCommandValue('fontSize');
+        if (sizeStr) {
+            const parsed = parseInt(sizeStr, 10);
+            if (!isNaN(parsed)) {
+                setFontSizeLevel(parsed);
+            } else {
+                setFontSizeLevel(3);
+            }
+        } else {
+            setFontSizeLevel(3);
+        }
+
+        editorRef.current?.focus();
+    };
+
+    /** Formatowanie tekstu: Bold/Italic/Underline/StrikeThrough. */
+    const handleFormatText = (
+        command: 'bold' | 'italic' | 'underline' | 'strikeThrough'
     ) => {
-        const newDescription = e.target.value;
-        setItems((prevItems) =>
-            prevItems.map((item) =>
-                item.id === id ? { ...item, description: newDescription } : item
-            )
-        );
-        setFilteredItems((prevItems) =>
-            prevItems.map((item) =>
-                item.id === id ? { ...item, description: newDescription } : item
-            )
-        );
-        scheduleSaveItem(id);
+        document.execCommand(command, false, '');
+        updateActiveButtons();
     };
 
+    /** Zwiększenie rozmiaru fontu z poziomu `fontSizeLevel`. */
+    const handleIncreaseFontSize = () => {
+        if (!window.getSelection) return;
+        // Zwiększamy w zakresie max 7
+        const newLevel = Math.min(fontSizeLevel + 1, 7);
+        setFontSizeLevel(newLevel);
+
+        document.execCommand('fontSize', false, String(newLevel));
+        updateActiveButtons();
+    };
+
+    /** Zmniejszenie rozmiaru fontu z poziomu `fontSizeLevel`. */
+    const handleDecreaseFontSize = () => {
+        if (!window.getSelection) return;
+        // Minimalnie 1
+        const newLevel = Math.max(fontSizeLevel - 1, 1);
+        setFontSizeLevel(newLevel);
+
+        document.execCommand('fontSize', false, String(newLevel));
+        updateActiveButtons();
+    };
+
+    /** Zapis do IndexedDB. */
     const handleSaveItem = async (id: number) => {
         const newDate = new Date().toLocaleString('pl-PL', {
             day: '2-digit',
@@ -292,22 +378,22 @@ const DragAndDropFormList: React.FC = () => {
             minute: '2-digit',
             second: '2-digit',
         });
-        setItems((prevItems) =>
-            prevItems.map((item) =>
-                item.id === id ? { ...item, lastModifiedDate: newDate } : item
+        setItems((prev) =>
+            prev.map((it) =>
+                it.id === id ? { ...it, lastModifiedDate: newDate } : it
             )
         );
-        setFilteredItems((prevItems) =>
-            prevItems.map((item) =>
-                item.id === id ? { ...item, lastModifiedDate: newDate } : item
+        setFilteredItems((prev) =>
+            prev.map((it) =>
+                it.id === id ? { ...it, lastModifiedDate: newDate } : it
             )
         );
 
-        const currentItem = items.find((item) => item.id === id);
+        const currentItem = items.find((it) => it.id === id);
         if (currentItem) {
             const updatedItem: FormData = {
                 ...currentItem,
-                lastModifiedDate: newDate,
+                lastModifiedDate: newDate
             };
             try {
                 await saveData(updatedItem);
@@ -318,60 +404,73 @@ const DragAndDropFormList: React.FC = () => {
         }
     };
 
-    // Usuwanie pojedynczej notatki
+    /** Usuwanie notatki. */
     const handleRemoveItem = async (id: number) => {
         await deleteData(id);
-        setItems((prevItems) => {
-            const updatedItems = prevItems.filter((item) => item.id !== id);
-            saveOrderToStorage(updatedItems);
-            return updatedItems;
+        setItems((prev) => {
+            const updated = prev.filter((it) => it.id !== id);
+            saveOrderToStorage(updated);
+            return updated;
         });
-        setFilteredItems((prevItems) => prevItems.filter((item) => item.id !== id));
-
-        // Usuń ID z selectedIds (jeśli było zaznaczone)
-        setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
-
+        setFilteredItems((prev) => prev.filter((it) => it.id !== id));
+        setSelectedIds((prev) => prev.filter((x) => x !== id));
         setConfirmRemoveId(null);
+
+        // Wyczyść historię „undo” dla usuniętej notatki
+        setUndoHistories((prev) => {
+            const { [id]: _omit, ...rest } = prev; // usuwamy klucz
+            return rest;
+        });
     };
 
+    /** Pokaż opis (edytor). */
     const showDescription = (id: string) => {
         setVisibleDescriptions(id);
         setIsDescriptionVisible(true);
         setFocusedItemId(Number(id));
+
+        // Upewnij się, że mamy zainicjowaną historię z aktualnym tekstem,
+        // jeśli wcześniej jej nie było.
+        const numId = Number(id);
+        const currentItem = items.find((it) => it.id === numId);
+        const existingText = currentItem?.description || '';
+        setUndoHistories((prev) => ({
+            ...prev,
+            [numId]: prev[numId] || [existingText],
+        }));
     };
 
+    /** Ukryj opis, usuń puste. */
     const hideDescription = (id: string) => {
         setVisibleDescriptions(null);
         setIsDescriptionVisible(false);
-        setItems((prevItems) => {
-            const updatedItems = prevItems.filter((item) => {
-                if (String(item.id) === id) {
-                    return (
-                        item.title.trim() !== '' || item.description.trim() !== ''
-                    );
+        setItems((prev) => {
+            const updated = prev.filter((it) => {
+                if (String(it.id) === id) {
+                    return it.title.trim() !== '' || it.description.trim() !== '';
                 }
                 return true;
             });
-            saveOrderToStorage(updatedItems);
-            return updatedItems;
+            saveOrderToStorage(updated);
+            return updated;
         });
-        setFilteredItems((prevItems) => {
-            const updatedItems = prevItems.filter((item) => {
-                if (String(item.id) === id) {
-                    return (
-                        item.title.trim() !== '' || item.description.trim() !== ''
-                    );
+        setFilteredItems((prev) => {
+            const updated = prev.filter((it) => {
+                if (String(it.id) === id) {
+                    return it.title.trim() !== '' || it.description.trim() !== '';
                 }
                 return true;
             });
-            return updatedItems;
+            return updated;
         });
     };
 
+    /** Potwierdzenie usuwania. */
     const handleConfirmRemoveItem = (id: number) => {
         setConfirmRemoveId(id);
     };
 
+    /** Kopiowanie bazy do schowka. */
     const handleCopyIndexedDB = async () => {
         try {
             const allData = await loadAllData();
@@ -385,6 +484,7 @@ const DragAndDropFormList: React.FC = () => {
         }
     };
 
+    /** Import pliku JSON. */
     const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -405,31 +505,31 @@ const DragAndDropFormList: React.FC = () => {
                     }
                 }
                 const existingData = await loadAllData();
-                const existingIds = new Set(existingData.map((item) => item.id));
+                const existingIds = new Set(existingData.map((it) => it.id));
                 let maxExistingId = existingData.reduce(
-                    (maxId, item) => Math.max(maxId, item.id),
+                    (maxId, it) => Math.max(maxId, it.id),
                     0
                 );
 
-                const newData = validData.map((item) => {
-                    if (existingIds.has(item.id)) {
+                const newData = validData.map((it) => {
+                    if (existingIds.has(it.id)) {
                         maxExistingId += 1;
-                        return { ...item, id: maxExistingId };
+                        return { ...it, id: maxExistingId };
                     } else {
-                        return item;
+                        return it;
                     }
                 });
 
-                for (const item of newData) {
-                    await saveData(item);
+                for (const it of newData) {
+                    await saveData(it);
                 }
 
-                setItems((prevItems) => {
-                    const updatedItems = [...prevItems, ...newData];
-                    saveOrderToStorage(updatedItems);
-                    return updatedItems;
+                setItems((prev) => {
+                    const updated = [...prev, ...newData];
+                    saveOrderToStorage(updated);
+                    return updated;
                 });
-                setFilteredItems((prevFiltered) => [...prevFiltered, ...newData]);
+                setFilteredItems((prev) => [...prev, ...newData]);
                 alert('Notes imported successfully.');
             } catch (error) {
                 console.error('Error importing data:', error);
@@ -440,29 +540,30 @@ const DragAndDropFormList: React.FC = () => {
         }
     };
 
+    /** Zmiana koloru tła notatki. */
     const addBgColor = (id: number, color: string) => {
-        setItems((prevItems) => {
-            const updatedItems = prevItems.map((item) => {
-                if (item.id === id) {
-                    const updatedItem = { ...item, bgColor: color };
-                    saveData(updatedItem).catch((error) =>
+        setItems((prev) => {
+            const updated = prev.map((it) => {
+                if (it.id === id) {
+                    const newItem = { ...it, bgColor: color };
+                    saveData(newItem).catch((error) =>
                         console.error('Error updating bgColor:', error)
                     );
-                    return updatedItem;
+                    return newItem;
                 }
-                return item;
+                return it;
             });
-            return updatedItems;
+            return updated;
         });
-
-        setFilteredItems((prevItems) =>
-            prevItems.map((item) =>
-                item.id === id ? { ...item, bgColor: color } : item
+        setFilteredItems((prev) =>
+            prev.map((it) =>
+                it.id === id ? { ...it, bgColor: color } : it
             )
         );
         setActiveColorButtons({});
     };
 
+    /** Pokazywanie/ukrywanie palety kolorów. */
     const toggleColorButton = (id: number) => {
         setActiveColorButtons((prev) => {
             if (prev[id]) {
@@ -473,32 +574,85 @@ const DragAndDropFormList: React.FC = () => {
         });
     };
 
-    // [SELECTION] Czy wszystkie widoczne notatki są zaznaczone?
+    // -------------------- MECHANIZM UNDO -------------------- //
+
+    /**
+     * Zapisuje nową wersję opisu w historii (stos) po każdej zmianie, np. co klawisz (keyUp).
+     * Nie duplikujemy identycznego stanu.
+     */
+    const pushUndoHistory = (id: number, content: string) => {
+        setUndoHistories((prev) => {
+            const currentHistory = prev[id] || [''];
+            // Jeśli ostatni stan w historii jest taki sam, nie duplikuj
+            if (currentHistory[currentHistory.length - 1] === content) {
+                return prev;
+            }
+            // Ograniczamy do np. 10 ostatnich stanów
+            const maxStates = 100;
+            const newHistory = [...currentHistory, content].slice(-maxStates);
+
+            return {
+                ...prev,
+                [id]: newHistory,
+            };
+        });
+    };
+
+    /**
+     * Cofnięcie ostatniej zmiany w notatce o danym id.
+     * Wraca do poprzedniego zapisanego stanu.
+     */
+    const handleUndo = (id: number) => {
+        setUndoHistories((prev) => {
+            const currentHistory = prev[id] || [''];
+            // Jeśli mamy mniej niż 2 stany – nie cofamy:
+            if (currentHistory.length < 2) {
+                return prev;
+            }
+            // Usuwamy ostatni stan:
+            const newHistory = currentHistory.slice(0, -1);
+
+            // Wczytujemy poprzedni stan, który staje się aktualnym
+            const previousContent = newHistory[newHistory.length - 1];
+
+            // Aktualizuj editorRef i stan itemu:
+            if (editorRef.current && String(visibleDescriptions) === String(id)) {
+                editorRef.current.innerHTML = previousContent;
+            }
+            handleDescriptionChange(previousContent, id);
+
+            return {
+                ...prev,
+                [id]: newHistory,
+            };
+        });
+        editorRef.current?.focus();
+    };
+
+    // -------------------- SELECTION (checkboxy) -------------------- //
+
     const areAllSelected =
         filteredItems.length > 0 &&
-        filteredItems.every((item) => selectedIds.includes(item.id));
+        filteredItems.every((it) => selectedIds.includes(it.id));
 
-    // [SELECTION] Zaznacz/odznacz wszystkie
     const handleSelectAll = () => {
         if (areAllSelected) {
             setSelectedIds([]);
         } else {
-            setSelectedIds(filteredItems.map((item) => item.id));
+            setSelectedIds(filteredItems.map((it) => it.id));
         }
     };
 
-    // [SELECTION] Togglowanie pojedynczego checkboxa
     const handleToggleItemSelection = (id: number) => {
         setSelectedIds((prev) => {
             if (prev.includes(id)) {
-                return prev.filter((itemId) => itemId !== id);
+                return prev.filter((x) => x !== id);
             } else {
                 return [...prev, id];
             }
         });
     };
 
-    // [SELECTION] Akcje z selecta (export, copy, remove)
     const handleSelectAction = async (action: string) => {
         if (!selectedIds.length) return;
 
@@ -510,21 +664,8 @@ const DragAndDropFormList: React.FC = () => {
                     await dataExport(selectedItems);
                 } catch (error) {
                     console.error(t('export_error'), error);
-                    alert(t('export_errror'));
+                    alert(t('export_error'));
                 }
-                // if(window.cordova) {
-                // } else {
-                //     const jsonString = JSON.stringify(selectedItems, null, 2);
-                //     const blob = new Blob([jsonString], { type: 'application/json' });
-                //     const url = URL.createObjectURL(blob);
-                //     const link = document.createElement('a');
-                //     link.href = url;
-                //     link.download = `notes-export-${Date.now()}.json`;
-                //     document.body.appendChild(link);
-                //     link.click();
-                //     document.body.removeChild(link);
-                //     URL.revokeObjectURL(url);
-                // }
                 break;
             }
             case 'copy-checked': {
@@ -538,7 +679,6 @@ const DragAndDropFormList: React.FC = () => {
                 break;
             }
             case 'remove-checked': {
-                // Usuwamy tylko zaznaczone
                 for (const note of selectedItems) {
                     await handleRemoveItem(note.id);
                 }
@@ -547,15 +687,19 @@ const DragAndDropFormList: React.FC = () => {
             default:
                 break;
         }
-
-        // <== UWAGA: usunięto reset selectedIds (by nie odznaczać automatycznie)
-        // Poprzednio było: setSelectedIds([]);
-        // Teraz checkboxy zostają w stanie w jakim są, z wyjątkiem tych usuniętych w akcji remove
     };
+
+    const stripHtml = (html: string) => {
+        return html
+            .replace(/<\/?[^>]+(>|$)/g, ' ')  // zamień wszystkie tagi na spację
+            .replace(/\s+/g, ' ')            // skompresuj wielokrotne spacje do jednej
+            .trim();                         // usuń zbędne spacje na początku i końcu
+    };
+
+    // -------------------- RENDER -------------------- //
 
     return (
         <>
-            {/*<div id="editableDiv" contentEditable="true" className="editable-box">Test test test</div>*/}
             <div className={`o-notepad ${isDescriptionVisible ? 'o-single' : ''}`}>
                 {!isDescriptionVisible && (
                     <>
@@ -580,27 +724,6 @@ const DragAndDropFormList: React.FC = () => {
                                 currentSort={currentSort}
                                 setCurrentSort={setCurrentSort}
                             />
-                            {/*{(selectSort && (filteredItems.length > 0)) && (*/}
-                            {/*    <select*/}
-                            {/*        className="o-bg-dark-gray o-sub-nav__select-sort"*/}
-                            {/*        value={currentSort}*/}
-                            {/*        onChange={(e) => setCurrentSort(e.target.value)}*/}
-                            {/*    >*/}
-                            {/*        <option value="my-sort">Mój sort</option>*/}
-                            {/*        <option value="by-date-added-from-newest">*/}
-                            {/*            Wg daty dodania od najnowszego*/}
-                            {/*        </option>*/}
-                            {/*        <option value="by-date-added-from-oldest">*/}
-                            {/*            Wg daty dodania od najstarszego*/}
-                            {/*        </option>*/}
-                            {/*        <option value="by-update-date-from-newest">*/}
-                            {/*            Wg daty aktualizacji od najnowszego*/}
-                            {/*        </option>*/}
-                            {/*        <option value="by-update-date-from-oldest">*/}
-                            {/*            Wg daty aktualizacji od najstarszego*/}
-                            {/*        </option>*/}
-                            {/*    </select>*/}
-                            {/*)}*/}
                         </div>
                     </>
                 )}
@@ -622,10 +745,13 @@ const DragAndDropFormList: React.FC = () => {
                                         {(provided) => (
                                             <li
                                                 className={`o-item ${item.bgColor} 
-                                                ${selectedIds.includes(item.id) ? 'o-item--check' : 'o-item--check-empty'}
-                                                ${
-                                                    String(visibleDescriptions) ===
-                                                    String(item.id)
+                                                    ${
+                                                    selectedIds.includes(item.id)
+                                                        ? 'o-item--check'
+                                                        : 'o-item--check-empty'
+                                                }
+                                                    ${
+                                                    String(visibleDescriptions) === String(item.id)
                                                         ? ' o-active-item'
                                                         : ''
                                                 }`}
@@ -635,7 +761,7 @@ const DragAndDropFormList: React.FC = () => {
                                                 <div
                                                     className="o-item-move"
                                                     {...provided.dragHandleProps}
-                                                    style={{cursor: 'grab'}}
+                                                    style={{ cursor: 'grab' }}
                                                 >
                                                     <i className="icon-move"></i>
                                                     <span>{t('move')}</span>
@@ -643,7 +769,7 @@ const DragAndDropFormList: React.FC = () => {
                                                         <span className="o-creation-date">
                                                             Stworzono: {item.creationDate}
                                                         </span>
-                                                        <br/>
+                                                        <br />
                                                         {item.lastModifiedDate && (
                                                             <span className="o-last-modified-date">
                                                                 Modyfikowano: {item.lastModifiedDate}
@@ -651,12 +777,12 @@ const DragAndDropFormList: React.FC = () => {
                                                         )}
                                                     </p>
                                                 </div>
+
                                                 <div className="o-options">
-                                                    {String(visibleDescriptions) ===
-                                                    String(item.id) ? (
+                                                    {String(visibleDescriptions) === String(item.id) ? (
                                                         <>
                                                             <button
-                                                                title={t('add')}
+                                                                title={t('return')}
                                                                 className="o-circle-btn o-circle-btn--fixed"
                                                                 onClick={() =>
                                                                     hideDescription(String(item.id))
@@ -690,7 +816,26 @@ const DragAndDropFormList: React.FC = () => {
                                                             {t('edit')}
                                                         </button>
                                                     )}
-
+                                                    <button
+                                                        className={`o-note-bg ${
+                                                            activeColorButtons[item.id]
+                                                                ? 'o-bg-dark'
+                                                                : ''
+                                                        }`}
+                                                        onClick={() => toggleColorButton(item.id)}
+                                                    >
+                                                        <i
+                                                            className={
+                                                                activeColorButtons[item.id]
+                                                                    ? 'icon-cancel'
+                                                                    : 'icon-down-open'
+                                                            }
+                                                        />
+                                                        Color{' '}
+                                                        <span
+                                                            className={`o-note-bg__box-color ${item.bgColor}`}
+                                                        />
+                                                    </button>
                                                     {confirmRemoveId === item.id ? (
                                                         <div className="o-modal-remove">
                                                             <div className="o-modal-remove__container">
@@ -730,36 +875,12 @@ const DragAndDropFormList: React.FC = () => {
                                                             {t('remove')}
                                                         </button>
                                                     )}
-
-                                                    <button
-                                                        className={`o-note-bg ${
-                                                            activeColorButtons[item.id]
-                                                                ? 'o-bg-dark'
-                                                                : ''
-                                                        }`}
-                                                        onClick={() => toggleColorButton(item.id)}
-                                                    >
-                                                        <i
-                                                            className={
-                                                                activeColorButtons[item.id]
-                                                                    ? 'icon-cancel'
-                                                                    : 'icon-down-open'
-                                                            }
-                                                        />
-                                                        Color{' '}
-                                                        <span
-                                                            className={`o-note-bg__box-color ${item.bgColor}`}
-                                                        />
-                                                    </button>
                                                     {activeColorButtons[item.id] && (
                                                         <ul className="o-color-picker">
                                                             <li
                                                                 role="button"
                                                                 onClick={() =>
-                                                                    addBgColor(
-                                                                        item.id,
-                                                                        'o-bg-default'
-                                                                    )
+                                                                    addBgColor(item.id, 'o-bg-default')
                                                                 }
                                                                 className="o-color-picker__btn o-bg-default"
                                                             />
@@ -780,44 +901,44 @@ const DragAndDropFormList: React.FC = () => {
                                                             <li
                                                                 role="button"
                                                                 onClick={() =>
-                                                                    addBgColor(
-                                                                        item.id,
-                                                                        'o-bg-green'
-                                                                    )
+                                                                    addBgColor(item.id, 'o-bg-green')
                                                                 }
                                                                 className="o-color-picker__btn o-bg-green"
                                                             />
                                                             <li
                                                                 role="button"
                                                                 onClick={() =>
-                                                                    addBgColor(
-                                                                        item.id,
-                                                                        'o-bg-yellow'
-                                                                    )
+                                                                    addBgColor(item.id, 'o-bg-yellow')
                                                                 }
                                                                 className="o-color-picker__btn o-bg-yellow"
                                                             />
                                                         </ul>
                                                     )}
 
-                                                    {!(String(visibleDescriptions) === String(item.id)) && (
-                                                        <label className="o-checkbox">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={selectedIds.includes(item.id)}
-                                                                onChange={() =>
-                                                                    handleToggleItemSelection(item.id)
-                                                                }
-                                                            />
-                                                            <i className={`${selectedIds.includes(item.id) ? 'icon-check' : 'icon-check-empty'} icon--bigger`}></i>
-                                                        </label>
-                                                    )}
+                                                    {String(visibleDescriptions) !==
+                                                        String(item.id) && (
+                                                            <label className="o-checkbox">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={selectedIds.includes(item.id)}
+                                                                    onChange={() =>
+                                                                        handleToggleItemSelection(item.id)
+                                                                    }
+                                                                />
+                                                                <i
+                                                                    className={`${
+                                                                        selectedIds.includes(item.id)
+                                                                            ? 'icon-check'
+                                                                            : 'icon-check-empty'
+                                                                    } icon--bigger`}
+                                                                ></i>
+                                                            </label>
+                                                        )}
                                                 </div>
 
-                                                {!(
-                                                    String(visibleDescriptions) !==
-                                                    String(item.id) && item.title === ''
-                                                ) && (
+                                                {/* Tytuł */}
+                                                {!(String(visibleDescriptions) !== String(item.id) &&
+                                                    item.title === '') && (
                                                     <input
                                                         ref={(el) => {
                                                             if (el && item.id === focusedItemId) {
@@ -837,40 +958,130 @@ const DragAndDropFormList: React.FC = () => {
                                                     />
                                                 )}
 
+                                                {/* Edytor opisu */}
                                                 {visibleDescriptions === String(item.id) ? (
                                                     <div className="o-editor">
-                                                        <textarea
+                                                        <div
                                                             className="o-editor__main"
-                                                            value={item.description}
-                                                            onChange={(e) =>
-                                                                handleDescriptionChange(e, item.id)
-                                                            }
-                                                            placeholder="Enter description"
-                                                        ></textarea>
+                                                            contentEditable
+                                                            suppressContentEditableWarning
+                                                            onFocus={(e) => {
+                                                                const el = e.currentTarget;
+                                                                if (el.innerHTML.trim() === '<br>') {
+                                                                    el.innerHTML = '';
+                                                                }
+                                                            }}
+                                                            onKeyUp={(e) => {
+                                                                updateActiveButtons();
+                                                                // Zapis stanu w historii przy każdej zmianie:
+                                                                pushUndoHistory(item.id, e.currentTarget.innerHTML);
+                                                            }}
+                                                            onMouseUp={() => updateActiveButtons()}
+                                                            onBlur={(e) => {
+                                                                const el = e.currentTarget;
+                                                                if (el.innerHTML.trim() === '<br>') {
+                                                                    el.innerHTML = '';
+                                                                }
+                                                                const newDesc = el.innerHTML;
+                                                                handleDescriptionChange(newDesc, item.id);
+                                                            }}
+                                                            ref={(el) => {
+                                                                if (el) {
+                                                                    editorRef.current = el;
+                                                                }
+                                                                // Jeśli notatka ma tekst, wypełnij edytor
+                                                                if (
+                                                                    el &&
+                                                                    el.innerHTML.trim() === '' &&
+                                                                    item.description.trim() !== ''
+                                                                ) {
+                                                                    el.innerHTML = item.description;
+                                                                }
+                                                            }}
+                                                        />
                                                         <div className="o-editor__buttons">
-                                                            <button>b</button>
-                                                            <button>i</button>
-                                                            <button>u</button>
+                                                            <button
+                                                                className={
+                                                                    formatState.bold
+                                                                        ? 'o-btn--active'
+                                                                        : ''
+                                                                }
+                                                                onClick={() =>
+                                                                    handleFormatText('bold')
+                                                                }
+                                                            >
+                                                                b
+                                                            </button>
+                                                            <button
+                                                                className={
+                                                                    formatState.italic
+                                                                        ? 'o-btn--active'
+                                                                        : ''
+                                                                }
+                                                                onClick={() =>
+                                                                    handleFormatText('italic')
+                                                                }
+                                                            >
+                                                                i
+                                                            </button>
+                                                            <button
+                                                                className={
+                                                                    formatState.underline
+                                                                        ? 'o-btn--active'
+                                                                        : ''
+                                                                }
+                                                                onClick={() =>
+                                                                    handleFormatText('underline')
+                                                                }
+                                                            >
+                                                                u
+                                                            </button>
+                                                            <button
+                                                                className={`o-btn--strike ${
+                                                                    formatState.strikethrough
+                                                                        ? 'o-btn--active'
+                                                                        : ''
+                                                                }`}
+                                                                onClick={() =>
+                                                                    handleFormatText('strikeThrough')
+                                                                }
+                                                            >
+                                                                del
+                                                            </button>
+                                                            <button onClick={handleIncreaseFontSize}>
+                                                                A+
+                                                            </button>
+                                                            <button onClick={handleDecreaseFontSize}>
+                                                                A-
+                                                            </button>
+
+                                                            {/* Przycisk „Undo” */}
+                                                            <button
+                                                                className="o-btn--undo"
+                                                                onClick={() => handleUndo(item.id)}
+                                                                disabled={
+                                                                    !undoHistories[item.id] ||
+                                                                    undoHistories[item.id].length < 2
+                                                                }
+                                                            >
+                                                                {t('undo')}
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 ) : (
+                                                    // Gdy nie edytujemy, ale nie ma tytułu, a jest opis
                                                     item.title === '' &&
                                                     item.description !== '' && (
                                                         <input
                                                             type="text"
                                                             readOnly
                                                             value={
-                                                                item.description.length > 40
-                                                                    ? `${item.description.substring(
-                                                                        0,
-                                                                        40
-                                                                    )}...`
-                                                                    : item.description
+                                                                stripHtml(item.description).length > 40
+                                                                    ? stripHtml(item.description).substring(0, 40) + '...'
+                                                                    : stripHtml(item.description)
                                                             }
                                                             placeholder="Enter description"
-                                                            onClick={() =>
-                                                                showDescription(String(item.id))
-                                                            }
+                                                            onClick={() => showDescription(String(item.id))}
                                                         />
                                                     )
                                                 )}
