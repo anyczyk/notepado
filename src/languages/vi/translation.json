@@ -144,5 +144,22 @@
   "premium_account": "Tài khoản Premium",
   "active": "Hoạt động",
   "code": "Mã",
-  "wrong_code": "Mã sai"
+  "wrong_code": "Mã sai",
+  "add": "Thêm",
+  "sort": "Sắp xếp",
+  "color": "Màu sắc",
+  "created": "Đã tạo",
+  "modified": "Đã chỉnh sửa",
+  "notepad": "Sổ ghi chú",
+  "action": "Hành động",
+  "my_sorting": "Sắp xếp của tôi",
+  "by_date_added_from_newest": "Theo ngày thêm, từ mới nhất",
+  "by_date_added_from_oldest": "Theo ngày thêm, từ cũ nhất",
+  "by_date_modified_from_newest": "Theo ngày chỉnh sửa, từ mới nhất",
+  "by_date_modified_from_oldest": "Theo ngày chỉnh sửa, từ cũ nhất",
+  "copy": "Sao chép",
+  "enter_title": "Nhập tiêu đề",
+  "enter_items_into_the_list": "Nhập các mục vào danh sách",
+  "to-do-list": "Danh sách việc cần làm",
+  "list": "danh sách"
 }

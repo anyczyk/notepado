@@ -144,5 +144,22 @@
   "premium_account": "Premium-рахунак",
   "active": "Актыўны",
   "code": "Код",
-  "wrong_code": "Няправільны код"
+  "wrong_code": "Няправільны код",
+  "add": "Дадаць",
+  "sort": "Сартыраваць",
+  "color": "Колер",
+  "created": "Створана",
+  "modified": "Зменена",
+  "notepad": "Нататнік",
+  "action": "Дзеянне",
+  "my_sorting": "Маё сартаванне",
+  "by_date_added_from_newest": "Па дадаванні, ад найноўшага",
+  "by_date_added_from_oldest": "Па дадаванні, ад найстарэйшага",
+  "by_date_modified_from_newest": "Па змяненні, ад найноўшага",
+  "by_date_modified_from_oldest": "Па змяненні, ад найстарэйшага",
+  "copy": "Капіяваць",
+  "enter_title": "Увядзіце загаловак",
+  "enter_items_into_the_list": "Увядзіце элементы ў спіс",
+  "to-do-list": "Спіс спраў",
+  "list": "Спіс"
 }

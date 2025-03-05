@@ -144,5 +144,22 @@
   "premium_account": "Premium účet",
   "active": "Aktívny",
   "code": "Kód",
-  "wrong_code": "Nesprávny kód"
+  "wrong_code": "Nesprávny kód",
+  "add": "Pridať",
+  "sort": "Zoradiť",
+  "color": "Farba",
+  "created": "Vytvorené",
+  "modified": "Upravené",
+  "notepad": "Poznámkový blok",
+  "action": "Akcia",
+  "my_sorting": "Moje triedenie",
+  "by_date_added_from_newest": "Podľa dátumu pridania, od najnovších",
+  "by_date_added_from_oldest": "Podľa dátumu pridania, od najstarších",
+  "by_date_modified_from_newest": "Podľa dátumu úpravy, od najnovších",
+  "by_date_modified_from_oldest": "Podľa dátumu úpravy, od najstarších",
+  "copy": "Kopírovať",
+  "enter_title": "Zadajte názov",
+  "enter_items_into_the_list": "Zadajte položky do zoznamu",
+  "to-do-list": "Zoznam úloh",
+  "list": "zoznam"
 }

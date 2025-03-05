@@ -144,5 +144,22 @@
   "premium_account": "Premium аккаунт",
   "active": "Активний",
   "code": "Код",
-  "wrong_code": "Невірний код"
+  "wrong_code": "Невірний код",
+  "add": "Додати",
+  "sort": "Сортувати",
+  "color": "Колір",
+  "created": "Створено",
+  "modified": "Змінено",
+  "notepad": "Блокнот",
+  "action": "Дія",
+  "my_sorting": "Моє сортування",
+  "by_date_added_from_newest": "За датою додавання (від нових)",
+  "by_date_added_from_oldest": "За датою додавання (від старих)",
+  "by_date_modified_from_newest": "За датою зміни (від нових)",
+  "by_date_modified_from_oldest": "За датою зміни (від старих)",
+  "copy": "Копіювати",
+  "enter_title": "Введіть заголовок",
+  "enter_items_into_the_list": "Введіть елементи в список",
+  "to-do-list": "Список справ",
+  "list": "список"
 }

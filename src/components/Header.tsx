@@ -1,7 +1,7 @@
 import React, { useContext, useRef, useEffect } from 'react';
 import { NotepadoContext } from '../context/NotepadoContext';
 import { useTranslation } from 'react-i18next';
-import {Link, Navigate, useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 
 interface HeaderProps {
     mainMenuVisible: boolean;
@@ -11,8 +11,6 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ mainMenuVisible, setMainMenuVisible }) => {
     const { t, i18n } = useTranslation();
     const {
-        loadNotepadSave,
-        loadNotepadSaveLanguage,
         setVisibleDescriptions,
         setIsDescriptionVisible,
         setShowSearch,
@@ -21,14 +19,12 @@ const Header: React.FC<HeaderProps> = ({ mainMenuVisible, setMainMenuVisible }) 
         searchTerm,
         handleSearchChange,
         isDescriptionVisible,
-        activePage,
         dirAttribute,
         setDirAttribute,
         rtlLangs
     } = useContext(NotepadoContext);
-    const navigate = useNavigate();
 
-    // Referencja do pola wyszukiwania
+    const navigate = useNavigate();
     const inputRef = useRef<HTMLInputElement>(null);
     const closeMenuRef = useRef(null);
     const closeMenuBtnRef = useRef(null);
@@ -44,11 +40,12 @@ const Header: React.FC<HeaderProps> = ({ mainMenuVisible, setMainMenuVisible }) 
         const htmlTag = document.querySelector("html");
         htmlTag.setAttribute("lang",lang);
         // const rtlLangs = ["ug", "syr", "ks", "ar", "fa", "he", "ur", "ckb", "arc", "sd", "ps"];
+        htmlTag.setAttribute("dir", "ltr");
         if (rtlLangs.includes(lang)) {
-            htmlTag.setAttribute("dir", "rtl");
+            // htmlTag.setAttribute("dir", "rtl");
             setDirAttribute('rtl');
         } else {
-            htmlTag.setAttribute("dir", "ltr");
+            // htmlTag.setAttribute("dir", "ltr");
             setDirAttribute('ltr');
         }
     }, [i18n.language]);
@@ -67,7 +64,6 @@ const Header: React.FC<HeaderProps> = ({ mainMenuVisible, setMainMenuVisible }) 
         };
     }, []);
 
-    // Ustawiamy fokus na polu wyszukiwania po zmianie showSearch na true
     useEffect(() => {
         if (showSearch && inputRef.current) {
             inputRef.current.focus();
@@ -78,17 +74,22 @@ const Header: React.FC<HeaderProps> = ({ mainMenuVisible, setMainMenuVisible }) 
         setMainMenuVisible(prevState => !prevState);
     };
 
-    const homePage = (e) => {
+    const homePage = async (e) => {
         e.preventDefault();
-        navigate("/");
-        setVisibleDescriptions(null);
-        setIsDescriptionVisible(false);
+        const btnGoBack = document.querySelector('.o-circle-btn--go-back') as HTMLElement;
+        if(btnGoBack) {
+            btnGoBack.click();
+        } else {
+            navigate("/");
+            setVisibleDescriptions(null);
+            setIsDescriptionVisible(false);
+        }
     };
 
     return (
         <header className="o-main-header">
 
-            <h1><a href="/" onClick={homePage}  data-discover="true"><i className="icon-notepado"></i><strong>Notepado</strong></a></h1>
+            <h1><a href="/" onClick={homePage}  data-discover="true"><i className="icon-notepado"></i><strong>Notepado</strong></a> {!showSearch ? <span>{t('notepad')}</span> : ''}</h1>
             <nav className="o-main-header__nav">
                 <ul>
                     {(!isDescriptionVisible && (
@@ -97,7 +98,7 @@ const Header: React.FC<HeaderProps> = ({ mainMenuVisible, setMainMenuVisible }) 
                                 <input
                                     ref={inputRef}
                                     type="search"
-                                    placeholder="Search..."
+                                    placeholder={`${t('search')}...`}
                                     value={searchTerm}
                                     onChange={handleSearchChange}
                                 />
@@ -222,7 +223,7 @@ const Header: React.FC<HeaderProps> = ({ mainMenuVisible, setMainMenuVisible }) 
                     {/*    </ul>*/}
                     {/*</nav>*/}
                     <div dir="ltr">
-                        <p>Notepado v1.0.02 {window.cordova ? 'App' : 'Browser'} / <span
+                        <p>Notepado v1.0.04 {window.cordova ? 'App' : 'Browser'} / <span
                             className="uppercase">{i18n.language}</span></p>
                     </div>
                 </div>

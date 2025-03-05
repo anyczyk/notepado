@@ -144,5 +144,22 @@
   "premium_account": "高级账户",
   "active": "活跃",
   "code": "代码",
-  "wrong_code": "错误的代码"
+  "wrong_code": "错误的代码",
+  "add": "添加",
+  "sort": "排序",
+  "color": "颜色",
+  "created": "创建于",
+  "modified": "已修改",
+  "notepad": "记事本",
+  "action": "操作",
+  "my_sorting": "我的排序",
+  "by_date_added_from_newest": "按添加日期（最新）",
+  "by_date_added_from_oldest": "按添加日期（最旧）",
+  "by_date_modified_from_newest": "按修改日期（最新）",
+  "by_date_modified_from_oldest": "按修改日期（最旧）",
+  "copy": "复制",
+  "enter_title": "输入标题",
+  "enter_items_into_the_list": "将项目输入列表",
+  "to-do-list": "待办事项清单",
+  "list": "清单"
 }

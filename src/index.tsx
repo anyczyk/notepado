@@ -25,10 +25,8 @@ const App: React.FC = () => {
     const [admobBanner, setAdmobBanner] = useState(false);
 
     useEffect(() => {
-        // Funkcja wywoływana po zdarzeniu deviceready
         console.log("useEffect ready");
         const onDeviceReady = () => {
-            // Sprawdzamy, czy uruchomiono w środowisku Cordova
             if (!window.cordova) {
                 console.log("Cordova nie istnieje");
                 return;
@@ -36,11 +34,9 @@ const App: React.FC = () => {
 
             console.log('Device is ready');
 
-            // 1. Inicjalizacja AdMob SDK
             (window as any).AdMobPluginCustom.initializeAdMob(
                 () => {
                     console.log('SDK initialized');
-                    // 2. Ładowanie reklamy pełnoekranowej (interstitial)
                     (window as any).AdMobPluginCustom.loadInterstitial(
                         () => {
                             console.log('Interstitial loaded');
@@ -49,15 +45,18 @@ const App: React.FC = () => {
                             console.log('Failed to load interstitial: ' + err);
                         }
                     );
-                    (window as any).AdMobPluginCustom.showBanner(
-                        () => {
-                            setAdmobBanner(true);
-                            console.log("Banner is showing/being loaded");
-                        },
-                        (err) => {
-                            console.log("Banner error:" + err);
-                        }
-                    );
+                    /* BANNER AD */
+                    // setTimeout(() => {
+                    //     (window as any).AdMobPluginCustom.showBanner(
+                    //         () => {
+                    //             setAdmobBanner(true);
+                    //             console.log("Banner is showing/being loaded");
+                    //         },
+                    //         (err) => {
+                    //             console.log("Banner error:" + err);
+                    //         }
+                    //     );
+                    // }, 30000);
                 },
                 (err) => {
                     console.log('Error initializing AdMob' + err);
@@ -68,7 +67,6 @@ const App: React.FC = () => {
 
         document.addEventListener('deviceready', onDeviceReady, false);
 
-        // Funkcja wywoływana po zamknięciu reklamy (adDismissed)
         const onAdDismissed = () => {
             console.log('Interstitial ad dismissed, loading new one...');
 

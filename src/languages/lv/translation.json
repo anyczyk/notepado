@@ -144,5 +144,22 @@
   "premium_account": "Premium konts",
   "active": "Aktīvs",
   "code": "Kods",
-  "wrong_code": "Nepareizs kods"
+  "wrong_code": "Nepareizs kods",
+  "add": "Pievienot",
+  "sort": "Kārtot",
+  "color": "Krāsa",
+  "created": "Izveidots",
+  "modified": "Mainīts",
+  "notepad": "Piezīmju bloks",
+  "action": "Darbība",
+  "my_sorting": "Mana kārtošana",
+  "by_date_added_from_newest": "Pēc pievienošanas datuma, no jaunākā",
+  "by_date_added_from_oldest": "Pēc pievienošanas datuma, no vecākā",
+  "by_date_modified_from_newest": "Pēc rediģēšanas datuma, no jaunākā",
+  "by_date_modified_from_oldest": "Pēc rediģēšanas datuma, no vecākā",
+  "copy": "Kopēt",
+  "enter_title": "Ievadiet nosaukumu",
+  "enter_items_into_the_list": "Ievadiet elementus sarakstā",
+  "to-do-list": "Uzdevumu saraksts",
+  "list": "saraksts"
 }

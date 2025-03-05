@@ -1,79 +1,310 @@
 {
-  "am": { "wrong_code": "የተሳሳተ ኮድ" },
-  "ar": { "wrong_code": "كود خاطئ" },
-  "arc": { "wrong_code": "ܟܘܕ ܕܥܠܚܛܝܐ" },
-  "az": { "wrong_code": "Yanlış kod" },
-  "be": { "wrong_code": "Няправільны код" },
-  "bg": { "wrong_code": "Грешен код" },
-  "ckb": { "wrong_code": "کۆدی هەڵە" },
-  "crs": { "wrong_code": "Kod mal" },
-  "cs": { "wrong_code": "Chybný kód" },
-  "da": { "wrong_code": "Forkert kode" },
-  "de": { "wrong_code": "Falscher Code" },
-  "el": { "wrong_code": "Λάθος κωδικός" },
-  "en": { "wrong_code": "Wrong code" },
-  "es": { "wrong_code": "Código incorrecto" },
-  "et": { "wrong_code": "Vale kood" },
-  "fa": { "wrong_code": "کد اشتباه" },
-  "fi": { "wrong_code": "Väärä koodi" },
-  "fr": { "wrong_code": "Code incorrect" },
-  "ha": { "wrong_code": "Kod mara daidai" },
-  "haw": { "wrong_code": "Code hewa" },
-  "he": { "wrong_code": "קוד שגוי" },
-  "hi": { "wrong_code": "गलत कोड" },
-  "hr": { "wrong_code": "Pogrešan kod" },
-  "ht": { "wrong_code": "Kòd mal" },
-  "hu": { "wrong_code": "Hibás kód" },
-  "hy": { "wrong_code": "Սխալ կոդ" },
-  "id": { "wrong_code": "Kode salah" },
-  "ig": { "wrong_code": "Koodu ezighi ezi" },
-  "it": { "wrong_code": "Codice errato" },
-  "ja": { "wrong_code": "間違ったコード" },
-  "ka": { "wrong_code": "არასწორი კოდი" },
-  "kk": { "wrong_code": "Қате код" },
-  "kl": { "wrong_code": "Forkert kode" },
-  "km": { "wrong_code": "កូដខុស" },
-  "ko": { "wrong_code": "잘못된 코드" },
-  "ks": { "wrong_code": "غلط کوڈ" },
-  "ky": { "wrong_code": "Ката код" },
-  "ln": { "wrong_code": "Kode mabe" },
-  "lo": { "wrong_code": "ລະຫັດຜິດ" },
-  "lt": { "wrong_code": "Neteisingas kodas" },
-  "lv": { "wrong_code": "Nepareizs kods" },
-  "mi": { "wrong_code": "Waehere hē" },
-  "mn": { "wrong_code": "Буруу код" },
-  "ms": { "wrong_code": "Kod salah" },
-  "ne": { "wrong_code": "गलत कोड" },
-  "nl": { "wrong_code": "Verkeerde code" },
-  "no": { "wrong_code": "Feil kode" },
-  "pl": { "wrong_code": "Błędny kod" },
-  "ps": { "wrong_code": "ناسم کوډ" },
-  "pt": { "wrong_code": "Código incorreto" },
-  "ro": { "wrong_code": "Cod greșit" },
-  "ru": { "wrong_code": "Неверный код" },
-  "sd": { "wrong_code": "غلط ڪوڊ" },
-  "sk": { "wrong_code": "Nesprávny kód" },
-  "sl": { "wrong_code": "Napačna koda" },
-  "so": { "wrong_code": "Koodh qaldan" },
-  "sq": { "wrong_code": "Kodi i gabuar" },
-  "sr": { "wrong_code": "Погрешан код" },
-  "sv": { "wrong_code": "Fel kod" },
-  "sw": { "wrong_code": "Msimbo sio sahihi" },
-  "syr": { "wrong_code": "ܟܘܕ ܕܥܠܚܛܝܐ" },
-  "tg": { "wrong_code": "Нодуруст код" },
-  "th": { "wrong_code": "รหัสไม่ถูกต้อง" },
-  "tk": { "wrong_code": "Nädogry kod" },
-  "tl": { "wrong_code": "Maling kodigo" },
-  "tpi": { "wrong_code": "Rong kod" },
-  "tr": { "wrong_code": "Yanlış kod" },
-  "ug": { "wrong_code": "خاتا كود" },
-  "uk": { "wrong_code": "Невірний код" },
-  "ur": { "wrong_code": "غلط کوڈ" },
-  "uz": { "wrong_code": "Noto'g'ri kod" },
-  "vi": { "wrong_code": "Mã sai" },
-  "wo": { "wrong_code": "Kode wuute" },
-  "xh": { "wrong_code": "Ikhodi engalunganga" },
-  "yo": { "wrong_code": "Koodu ti ko tọ" },
-  "zh": { "wrong_code": "错误的代码" },
-  "zu": { "wrong_code": "Ikhodi engalungile" }
+  "am": {
+    "to-do-list": "የማድረግ ዝርዝር",
+    "list": "ዝርዝር"
+  },
+  "ar": {
+    "to-do-list": "قائمة المهام",
+    "list": "قائمة"
+  },
+  "arc": {
+    "to-do-list": "ܩܰܝܡܳܐ ܕܥܰܒܳܕܳܐ",
+    "list": "ܩܰܝܡܳܐ"
+  },
+  "az": {
+    "to-do-list": "Etməli işlər siyahısı",
+    "list": "Siyahı"
+  },
+  "be": {
+    "to-do-list": "Спіс спраў",
+    "list": "Спіс"
+  },
+  "bg": {
+    "to-do-list": "Списък със задачи",
+    "list": "Списък"
+  },
+  "ckb": {
+    "to-do-list": "لیستی کارەکان",
+    "list": "لیست"
+  },
+  "crs": {
+    "to-do-list": "Lis travay pou fè",
+    "list": "Lis"
+  },
+  "cs": {
+    "to-do-list": "Seznam úkolů",
+    "list": "Seznam"
+  },
+  "da": {
+    "to-do-list": "Gøreliste",
+    "list": "Liste"
+  },
+  "de": {
+    "to-do-list": "To-do-Liste",
+    "list": "Liste"
+  },
+  "el": {
+    "to-do-list": "Λίστα εργασιών",
+    "list": "Λίστα"
+  },
+  "en": {
+    "to-do-list": "To-do list",
+    "list": "list"
+  },
+  "es": {
+    "to-do-list": "Lista de tareas",
+    "list": "lista"
+  },
+  "et": {
+    "to-do-list": "Tegevuste nimekiri",
+    "list": "nimekiri"
+  },
+  "fa": {
+    "to-do-list": "فهرست کارها",
+    "list": "فهرست"
+  },
+  "fi": {
+    "to-do-list": "Tehtävälista",
+    "list": "lista"
+  },
+  "fr": {
+    "to-do-list": "Liste de tâches",
+    "list": "liste"
+  },
+  "ha": {
+    "to-do-list": "Jerin ayyuka",
+    "list": "jerin"
+  },
+  "haw": {
+    "to-do-list": "Papa hana",
+    "list": "Papa"
+  },
+  "he": {
+    "to-do-list": "רשימת מטלות",
+    "list": "רשימה"
+  },
+  "hi": {
+    "to-do-list": "करने की सूची",
+    "list": "सूची"
+  },
+  "hr": {
+    "to-do-list": "Popis zadataka",
+    "list": "popis"
+  },
+  "ht": {
+    "to-do-list": "Lis travay pou fè",
+    "list": "lis"
+  },
+  "hu": {
+    "to-do-list": "Teendők listája",
+    "list": "lista"
+  },
+  "hy": {
+    "to-do-list": "Աշխատակազմի ցուցակ",
+    "list": "ցուցակ"
+  },
+  "id": {
+    "to-do-list": "Daftar tugas",
+    "list": "daftar"
+  },
+  "ig": {
+    "to-do-list": "Ndepụta ọrụ",
+    "list": "ndepụta"
+  },
+  "it": {
+    "to-do-list": "Elenco delle cose da fare",
+    "list": "elenco"
+  },
+  "ja": {
+    "to-do-list": "やることリスト",
+    "list": "リスト"
+  },
+  "ka": {
+    "to-do-list": "სამუშაოთა სია",
+    "list": "სია"
+  },
+  "kk": {
+    "to-do-list": "Істер тізімі",
+    "list": "тізім"
+  },
+  "kl": {
+    "to-do-list": "To-do-oqaatsit",
+    "list": "Oqaatsi"
+  },
+  "km": {
+    "to-do-list": "បញ្ជីកិច្ចការត្រូវធ្វើ",
+    "list": "បញ្ជី"
+  },
+  "ko": {
+    "to-do-list": "할 일 목록",
+    "list": "목록"
+  },
+  "ks": {
+    "to-do-list": "کام جي فهرست",
+    "list": "فهرست"
+  },
+  "ky": {
+    "to-do-list": "Иштөө тизмеси",
+    "list": "тизме"
+  },
+  "ln": {
+    "to-do-list": "Lisɛ ya misala",
+    "list": "lisɛ"
+  },
+  "lo": {
+    "to-do-list": "ບັນຊີວຽກທີ່ຕ້ອງເຮັດ",
+    "list": "ບັນຊີ"
+  },
+  "lt": {
+    "to-do-list": "Užduočių sąrašas",
+    "list": "sąrašas"
+  },
+  "lv": {
+    "to-do-list": "Uzdevumu saraksts",
+    "list": "saraksts"
+  },
+  "mi": {
+    "to-do-list": "Rārangi mahi",
+    "list": "rārangi"
+  },
+  "mn": {
+    "to-do-list": "Гүйцэтгэх зүйлсийн жагсаалт",
+    "list": "жагсаалт"
+  },
+  "ms": {
+    "to-do-list": "Senarai tugasan",
+    "list": "senarai"
+  },
+  "ne": {
+    "to-do-list": "गर्नुपर्ने कामहरूको सूची",
+    "list": "सूची"
+  },
+  "nl": {
+    "to-do-list": "Takenlijst",
+    "list": "lijst"
+  },
+  "no": {
+    "to-do-list": "Gjøremålsliste",
+    "list": "liste"
+  },
+  "pl": {
+    "to-do-list": "Lista zadań",
+    "list": "lista"
+  },
+  "ps": {
+    "to-do-list": "دندو ليست",
+    "list": "ليست"
+  },
+  "pt": {
+    "to-do-list": "Lista de tarefas",
+    "list": "lista"
+  },
+  "ro": {
+    "to-do-list": "Listă de activități",
+    "list": "listă"
+  },
+  "ru": {
+    "to-do-list": "Список дел",
+    "list": "список"
+  },
+  "sd": {
+    "to-do-list": "ڪرڻ لاءِ لسٽ",
+    "list": "لسٽ"
+  },
+  "sk": {
+    "to-do-list": "Zoznam úloh",
+    "list": "zoznam"
+  },
+  "sl": {
+    "to-do-list": "Seznam opravil",
+    "list": "seznam"
+  },
+  "so": {
+    "to-do-list": "Liiska hawlaha",
+    "list": "liiska"
+  },
+  "sq": {
+    "to-do-list": "Lista e detyrave",
+    "list": "listë"
+  },
+  "sr": {
+    "to-do-list": "Lista obaveza",
+    "list": "lista"
+  },
+  "sv": {
+    "to-do-list": "Att-göra-lista",
+    "list": "lista"
+  },
+  "sw": {
+    "to-do-list": "Orodha ya kazi",
+    "list": "orodha"
+  },
+  "syr": {
+    "to-do-list": "ܩܰܝܡܳܐ ܕܥܰܒܳܕܳܐ",
+    "list": "ܩܰܝܡܳܐ"
+  },
+  "tg": {
+    "to-do-list": "Рӯйхати вазифаҳо",
+    "list": "рӯйхат"
+  },
+  "th": {
+    "to-do-list": "รายการสิ่งที่ต้องทำ",
+    "list": "รายการ"
+  },
+  "tk": {
+    "to-do-list": "Etmek zerur işleriň sanawy",
+    "list": "sanaw"
+  },
+  "tl": {
+    "to-do-list": "Talaan ng mga gagawin",
+    "list": "talaan"
+  },
+  "tpi": {
+    "to-do-list": "Lis bilong wok i mas mekim",
+    "list": "lis"
+  },
+  "tr": {
+    "to-do-list": "Yapılacaklar listesi",
+    "list": "liste"
+  },
+  "ug": {
+    "to-do-list": "ئىشلەش تىزىمى",
+    "list": "تىزىم"
+  },
+  "uk": {
+    "to-do-list": "Список справ",
+    "list": "список"
+  },
+  "ur": {
+    "to-do-list": "کرنے کی فہرست",
+    "list": "فہرست"
+  },
+  "uz": {
+    "to-do-list": "Bajariladigan ishlar ro'yxati",
+    "list": "ro'yxat"
+  },
+  "vi": {
+    "to-do-list": "Danh sách việc cần làm",
+    "list": "danh sách"
+  },
+  "wo": {
+    "to-do-list": "Liistu ñaawteef",
+    "list": "liist"
+  },
+  "xh": {
+    "to-do-list": "Uluhlu lwezinto okufuneka zenziwe",
+    "list": "uluhlu"
+  },
+  "yo": {
+    "to-do-list": "Àtòjọ iṣẹ́",
+    "list": "àtòjọ"
+  },
+  "zh": {
+    "to-do-list": "待办事项清单",
+    "list": "清单"
+  },
+  "zu": {
+    "to-do-list": "Uhlu lwezinto okufanele zenziwe",
+    "list": "uhlu"
+  }
 }

@@ -1,5 +1,6 @@
 // NotepadoContext.tsx
 import React, {createContext, useState, useEffect, useCallback, ChangeEvent} from 'react';
+import {FormData} from "../components/elements/functions";
 
 const rtlLangs = ["ug", "syr", "ks", "ar", "fa", "he", "ur", "ckb", "arc", "sd", "ps"];
 const rtlCodeLangs = ["ug-CN", "syr-SY", "ks-IN", "ar-SA", "fa-IR", "he-IL", "ur-PK", "ckb-IQ", "arc-IQ", "sd-PK", "ps-AF"];
@@ -57,6 +58,7 @@ const languageMap = {
 export const NotepadoContext = createContext(undefined);
 
 export const NotepadoProvider = ({ children }) => {
+    const [items, setItems] = useState<FormData[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [dirAttribute, setDirAttribute] = useState('ltr');
     const [visibleDescriptions, setVisibleDescriptions] = useState<string | null>(null);
@@ -100,6 +102,7 @@ export const NotepadoProvider = ({ children }) => {
 
     return (
         <NotepadoContext.Provider value={{
+            items, setItems,
             dirAttribute, setDirAttribute,
             selectSort, setSelectSort,
             handleSearchChange,

@@ -7,6 +7,7 @@ export interface FormData {
     creationDate: string;
     lastModifiedDate: string;
     bgColor: string;
+    toDoList: string;
 }
 
 export const openDB = async (): Promise<IDBDatabase> => {

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap');
+
 :root {
   --color-black: #000;
   --color-dark: #181818;
@@ -6,6 +8,7 @@
   --color-red: #b42916;
   --color-red-alpha: rgba(180,41,22,.9);
   --color-green: #005d00;
+  --color-green-alpha: rgba(0,93,0,.9);
   --color-defeult-btn: #c07c00;
 
   --color-black-opacity-10: rgba(0,0,0,.1);
@@ -41,7 +44,7 @@ $height-admob-banner: 50px;
 }
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: Roboto, Arial, sans-serif;
   margin: 0;
   padding: 0;
   background-color: var(--color-black);
@@ -208,12 +211,16 @@ button,
     display: flex;
     gap: 4px;
     padding: 4px 0 4px 4px;
+    position: relative;
 
     span {
       display: block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      position: absolute;
+      font-size: 10px;
+      top: calc(100% - 8px);
+      left: 62px;
+      color: var(--color-white-opacity-40);
+      font-weight: 300;
     }
 
     a {
@@ -478,15 +485,16 @@ button,
 
       .o-editor__main {
         height: calc(100% - 44px);
+        line-height: 1.2;
       }
 
-      .o-editor__main:empty::before {
-        content: "Enter text...";
-        color: #999; /* lub inny kolor placeholdera */
+      .o-editor__main[title].o-empty-text-box::before {
+        content: attr(title);
+        color: #999;
         pointer-events: none;
         opacity: .5;
       }
-      .o-editor__main:empty:focus::before {
+      .o-editor__main.o-empty-text-box:focus::before {
         content: "";
       }
     }
@@ -560,7 +568,7 @@ input[type=search] {
 }
 
 .o-btn-save {
-  background-color: var(--color-green);
+  background-color: var(--color-green-alpha);
 }
 
 .o-save-container {
@@ -621,6 +629,27 @@ input[type=search] {
     // box-shadow: 0 0 2px var(--color-black);
     box-shadow: 0 0 8px var(--color-black-opacity-80), inset 0 0 10px var(--color-black-opacity-60);
     position: relative;
+
+    &--to-do {
+      .o-editor__main {
+        > div {
+          counter-increment: section;
+          position: relative;
+          padding-bottom: calc($main-gap/2);
+          padding-top: calc($main-gap/2);
+          border-bottom: 1px solid var(--color-white-opacity-10);
+
+          &::before {
+            content: counter(section) ".";
+            font-weight: bold;
+            color: black;
+            display: inline-block;
+            min-width: 24px;
+            padding-right: 4px;
+          }
+        }
+      }
+    }
 
     &--check {
       &::before {
@@ -765,7 +794,7 @@ input[type=search] {
 }
 
 .o-bg-blue {
-  background-color: #000052 !important;
+  background-color: #002152 !important;
 }
 
 .o-bg-green {
@@ -789,8 +818,8 @@ input[type=search] {
   align-items: center;
 
   &__box-color {
-    width: 10px;
-    height: 10px;
+    min-width: 10px;
+    min-height: 10px;
     display: block;
     margin-left: $main-gap;
     border: 1px solid var(--color-white);
@@ -847,8 +876,18 @@ input[type=search] {
 }
 
 .o-item {
-  button:not(.o-btn-remove) {
+  button:not(.o-btn-remove):not(.o-btn-save):not(.o-circle-btn) {
     background-color: var(--color-black-opacity-30);
+    &:active {
+      background-color: var(--color-white);
+    }
+  }
+
+  &--to-do {
+    .o-btn-to-do {
+      background-color: var(--color-white) !important;
+      color: var(--color-dark);
+    }
   }
 }
 
@@ -858,14 +897,22 @@ input[type=search] {
     padding-top: $main-gap;
     display: flex;
     gap: $main-gap;
+    overflow-x: auto;
+
+    &::-webkit-scrollbar {
+      height: 0;
+    }
 
     button {
-      width: 36px;
+      width: auto;
+      min-width: 36px;
       user-select: none;
     }
 
-    .o-btn--undo {
+    .o-btn--undo,
+    .o-btn--clear {
       width: auto;
+      flex-shrink: 0;
 
       &[disabled] {
         opacity: .3 !important;

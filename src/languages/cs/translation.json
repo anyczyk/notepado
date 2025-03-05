@@ -144,5 +144,22 @@
   "premium_account": "Premium účet",
   "active": "Aktivní",
   "code": "Kód",
-  "wrong_code": "Chybný kód"
+  "wrong_code": "Chybný kód",
+  "add": "Přidat",
+  "sort": "Seřadit",
+  "color": "Barva",
+  "created": "Vytvořeno",
+  "modified": "Upraveno",
+  "notepad": "Poznámkový blok",
+  "action": "Akce",
+  "my_sorting": "Moje řazení",
+  "by_date_added_from_newest": "Podle data přidání od nejnovějších",
+  "by_date_added_from_oldest": "Podle data přidání od nejstarších",
+  "by_date_modified_from_newest": "Podle data úpravy od nejnovějších",
+  "by_date_modified_from_oldest": "Podle data úpravy od nejstarších",
+  "copy": "Kopírovat",
+  "enter_title": "Zadejte název",
+  "enter_items_into_the_list": "Zadejte položky do seznamu",
+  "to-do-list": "Seznam úkolů",
+  "list": "Seznam"
 }

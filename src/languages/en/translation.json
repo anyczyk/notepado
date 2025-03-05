@@ -144,5 +144,22 @@
   "premium_account": "Premium account",
   "active": "Active",
   "code": "Code",
-  "wrong_code": "Wrong code"
+  "wrong_code": "Wrong code",
+  "add": "Add",
+  "sort": "Sort",
+  "color": "Color",
+  "created": "Created",
+  "modified": "Modified",
+  "notepad": "Notepad",
+  "action": "Action",
+  "my_sorting": "My sorting",
+  "by_date_added_from_newest": "By date added from newest",
+  "by_date_added_from_oldest": "By date added from oldest",
+  "by_date_modified_from_newest": "By date modified from newest",
+  "by_date_modified_from_oldest": "By date modified from oldest",
+  "copy": "Copy",
+  "enter_title": "Enter title",
+  "enter_items_into_the_list": "Enter items into the list",
+  "to-do-list": "To-do list",
+  "list": "list"
 }

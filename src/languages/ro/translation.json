@@ -144,5 +144,22 @@
   "premium_account": "Cont Premium",
   "active": "Activ",
   "code": "Cod",
-  "wrong_code": "Cod greșit"
+  "wrong_code": "Cod greșit",
+  "add": "Adaugă",
+  "sort": "Sortează",
+  "color": "Culoare",
+  "created": "Creat",
+  "modified": "Modificat",
+  "notepad": "Notepad",
+  "action": "Acțiune",
+  "my_sorting": "Sortarea mea",
+  "by_date_added_from_newest": "După data adăugării, de la cel mai nou",
+  "by_date_added_from_oldest": "După data adăugării, de la cel mai vechi",
+  "by_date_modified_from_newest": "După data modificării, de la cel mai nou",
+  "by_date_modified_from_oldest": "După data modificării, de la cel mai vechi",
+  "copy": "Copiază",
+  "enter_title": "Introduceți titlul",
+  "enter_items_into_the_list": "Introduceți elementele în listă",
+  "to-do-list": "Listă de activități",
+  "list": "listă"
 }

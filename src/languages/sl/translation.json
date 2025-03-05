@@ -144,5 +144,22 @@
   "premium_account": "Premium račun",
   "active": "Aktiven",
   "code": "Koda",
-  "wrong_code": "Napačna koda"
+  "wrong_code": "Napačna koda",
+  "add": "Dodaj",
+  "sort": "Razvrsti",
+  "color": "Barva",
+  "created": "Ustvarjeno",
+  "modified": "Spremenjeno",
+  "notepad": "Zapisnik",
+  "action": "Dejanje",
+  "my_sorting": "Moje razvrščanje",
+  "by_date_added_from_newest": "Po datumu dodajanja, od najnovejših",
+  "by_date_added_from_oldest": "Po datumu dodajanja, od najstarejših",
+  "by_date_modified_from_newest": "Po datumu spremembe, od najnovejših",
+  "by_date_modified_from_oldest": "Po datumu spremembe, od najstarejših",
+  "copy": "Kopiraj",
+  "enter_title": "Vnesite naslov",
+  "enter_items_into_the_list": "Vnesite elemente v seznam",
+  "to-do-list": "Seznam opravil",
+  "list": "seznam"
 }

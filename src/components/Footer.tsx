@@ -22,7 +22,7 @@ const Footer: React.FC = () => {
 
     return (
         <footer className="o-main-footer">
-            <p>&copy; semDesign Notepado v1.0.0 ({platform})</p>
+            <p>&copy; semDesign<br />Notepado v1.0.03 ({platform})</p>
         </footer>
     );
 };

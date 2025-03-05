@@ -144,5 +144,22 @@
   "premium_account": "Konto Premium",
   "active": "Aktywne",
   "code": "Kod",
-  "wrong_code": "Błędny kod"
+  "wrong_code": "Błędny kod",
+  "add": "Dodaj",
+  "sort": "Sortuj",
+  "color": "Kolor",
+  "created": "Utworzono",
+  "modified": "Zmodyfikowano",
+  "notepad": "Notatnik",
+  "action": "Akcja",
+  "my_sorting": "Moje sortowanie",
+  "by_date_added_from_newest": "Według daty dodania – od najnowszych",
+  "by_date_added_from_oldest": "Według daty dodania – od najstarszych",
+  "by_date_modified_from_newest": "Według daty modyfikacji – od najnowszych",
+  "by_date_modified_from_oldest": "Według daty modyfikacji – od najstarszych",
+  "copy": "Kopiuj",
+  "enter_title": "Wpisz tytuł",
+  "enter_items_into_the_list": "Wprowadź elementy do listy",
+  "to-do-list": "Lista zadań",
+  "list": "lista"
 }

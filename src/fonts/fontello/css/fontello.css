@@ -101,6 +101,9 @@
 .icon-check:before { content: '\e82b'; } /* '' */
 .icon-check-1:before { content: '\e82c'; } /* '' */
 .icon-check-empty-1:before { content: '\e82d'; } /* '' */
+.icon-list-numbered:before { content: '\e82e'; } /* '' */
+.icon-clipboard:before { content: '\e82f'; } /* '' */
+.icon-list-nested:before { content: '\e830'; } /* '' */
 .icon-crown:before { content: '\e844'; } /* '' */
 .icon-spin4:before { content: '\ec06'; } /* '' */
 .icon-download:before { content: '\f02e'; } /* '' */

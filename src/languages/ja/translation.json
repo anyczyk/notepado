@@ -144,5 +144,22 @@
   "premium_account": "プレミアムアカウント",
   "active": "アクティブ",
   "code": "コード",
-  "wrong_code": "間違ったコード"
+  "wrong_code": "間違ったコード",
+  "add": "追加",
+  "sort": "並べ替え",
+  "color": "色",
+  "created": "作成日",
+  "modified": "変更済み",
+  "notepad": "メモ帳",
+  "action": "アクション",
+  "my_sorting": "私の並べ替え",
+  "by_date_added_from_newest": "追加日（新しい順）",
+  "by_date_added_from_oldest": "追加日（古い順）",
+  "by_date_modified_from_newest": "変更日（新しい順）",
+  "by_date_modified_from_oldest": "変更日（古い順）",
+  "copy": "コピー",
+  "enter_title": "タイトルを入力",
+  "enter_items_into_the_list": "リストに項目を入力",
+  "to-do-list": "やることリスト",
+  "list": "リスト"
 }

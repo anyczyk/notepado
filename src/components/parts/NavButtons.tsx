@@ -3,7 +3,7 @@
 import React, { ChangeEvent, useContext, useState } from 'react';
 import { NotepadoContext } from "../../context/NotepadoContext";
 import { useTranslation } from 'react-i18next';
-import {showInterstitial} from "../../services/admobService";
+// import {showInterstitial} from "../../services/admobService";
 
 interface NavButtonsProps {
     filteredItems: any[];
@@ -11,7 +11,6 @@ interface NavButtonsProps {
     handleCopyIndexedDB: () => void;
     handleFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
 
-    // Zarządzanie zaznaczeniami:
     selectedCount: number;
     areAllSelected: boolean;
     onSelectAllToggle: () => void;
@@ -24,7 +23,6 @@ interface NavButtonsProps {
 const NavButtons: React.FC<NavButtonsProps> = ({
                                                    filteredItems,
                                                    handleAddNewItemAll,
-                                                   handleCopyIndexedDB,
                                                    handleFileChange,
                                                    selectedCount,
                                                    areAllSelected,
@@ -44,7 +42,6 @@ const NavButtons: React.FC<NavButtonsProps> = ({
         const action = e.target.value;
         if (action !== "action") {
             onSelectAction(action);
-            // Nie resetujemy selectedIds, jedynie przywracamy domyślną opcję selecta
             setSelectValue("action");
         }
     };
@@ -88,25 +85,24 @@ const NavButtons: React.FC<NavButtonsProps> = ({
                             }}
                         >
                             <i className={selectSort ? 'icon-cancel' : 'icon-down-open'}/>
-                            <span>{t('sortuj')}</span>
+                            <span>{t('sort')}</span>
                         </button>
 
-                        {/* Select pojawia się tylko, jeśli jest cokolwiek zaznaczone */}
                         {selectedCount > 0 && (
                             <select
                                 className="ml-auto o-bg-dark-gray"
                                 value={selectValue || "action"}
                                 onChange={handleSelectChange}
                             >
-                                <option value="action">-- Akcja --</option>
-                                <option value="export-checked">Exportuj</option>
-                                <option value="copy-checked">Kopiuj</option>
-                                <option value="remove-checked">Usuń</option>
+                                <option value="action">-- {t('action')} --</option>
+                                <option value="export-checked">{t('export')}</option>
+                                <option value="copy-checked">{t('copy')}</option>
+                                <option value="remove-checked">{t('remove')}</option>
                             </select>
                         )}
                         <button className={`ml-auto o-btn--checked-all ${selectedCount > 0 ? '' : ''}`}
                                 onClick={onSelectAllToggle}>
-                            {(areAllSelected || (selectedCount > 0)) ? '' : <span>Zaznacz wszystkie</span>}
+                            {(areAllSelected || (selectedCount > 0)) ? '' : <span>{t('select_all')}</span>}
                             <i className={`${areAllSelected ? 'icon-check' : 'icon-check-empty'} icon--bigger`}/>
                         </button>
                     </>}
@@ -116,18 +112,18 @@ const NavButtons: React.FC<NavButtonsProps> = ({
                             value={currentSort}
                             onChange={(e) => setCurrentSort(e.target.value)}
                         >
-                            <option value="my-sort">Mój sort</option>
+                            <option value="my-sort">{t('my_sorting')}</option>
                             <option value="by-date-added-from-newest">
-                                Wg daty dodania od najnowszego
+                                {t('by_date_added_from_newest')}
                             </option>
                             <option value="by-date-added-from-oldest">
-                                Wg daty dodania od najstarszego
+                                {t('by_date_added_from_oldest')}
                             </option>
                             <option value="by-update-date-from-newest">
-                                Wg daty aktualizacji od najnowszego
+                                {t('by_date_modified_from_newest')}
                             </option>
                             <option value="by-update-date-from-oldest">
-                                Wg daty aktualizacji od najstarszego
+                                {t('by_date_modified_from_oldest')}
                             </option>
                         </select>
                     )}

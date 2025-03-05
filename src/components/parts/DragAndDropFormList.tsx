@@ -26,7 +26,6 @@ import {
     FormData,
 } from '../elements/functions';
 
-/** Parsowanie dat w formacie dd.mm.yyyy HH:MM:SS (np. "03.03.2023 12:15:30"). */
 const parsePolishDateString = (dateStr?: string): number => {
     if (!dateStr) {
         console.warn('parsePolishDateString: brak daty');
@@ -58,7 +57,6 @@ const getSortableUpdateDate = (item: FormData): number => {
 const DragAndDropFormList: React.FC = () => {
     const { t } = useTranslation();
 
-    // Z kontekstu:
     const {
         searchTerm,
         isDescriptionVisible,
@@ -68,30 +66,20 @@ const DragAndDropFormList: React.FC = () => {
         selectSort,
         setShowSearch,
         setSearchTerm,
-        setSelectSort
+        setSelectSort,
+        items, setItems
     } = useContext(NotepadoContext);
 
-    // -------------------- STANY -------------------- //
-    const [items, setItems] = useState<FormData[]>([]);
     const [filteredItems, setFilteredItems] = useState<FormData[]>([]);
-
     const [confirmRemoveId, setConfirmRemoveId] = useState<number | null>(null);
     const [saveTimers, setSaveTimers] = useState<{ [key: number]: NodeJS.Timeout }>({});
-
     const [currentSort, setCurrentSort] = useState<string>('my-sort');
     const [activeColorButtons, setActiveColorButtons] = useState<{ [id: number]: boolean }>({});
-
     const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
-
-    // Zaznaczone checkboxy (selektory zaznaczenia):
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
-
-    // Lokalna historia (stos) dla każdego item.id
     const [undoHistories, setUndoHistories] = useState<{ [id: number]: string[] }>({});
-
     const editorRef = useRef<HTMLDivElement | null>(null);
 
-    // Stan przycisków formatowania (b/i/u/strikethrough):
     const [formatState, setFormatState] = useState({
         bold: false,
         italic: false,
@@ -99,15 +87,20 @@ const DragAndDropFormList: React.FC = () => {
         strikethrough: false,
     });
 
-    /**
-     * Poziom rozmiaru fontu 1..7
-     * Domyślnie 3 (mniej więcej "środkowy" w staromodnej skali).
-     */
     const [fontSizeLevel, setFontSizeLevel] = useState<number>(3);
 
-    // -------------------- HOOKI -------------------- //
+    const [isSelectionEmpty, setIsSelectionEmpty] = useState(true);
 
-    /** Zamykamy color-picker, sort itp. przy kliknięciu poza. */
+    const mutationObserverRef = useRef<MutationObserver | null>(null);
+    const checkEditorEmpty = (editor: HTMLDivElement) => {
+        const text = editor.innerText.trim();
+        if (!text) {
+            editor.classList.add("o-empty-text-box");
+        } else {
+            editor.classList.remove("o-empty-text-box");
+        }
+    };
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
@@ -129,9 +122,8 @@ const DragAndDropFormList: React.FC = () => {
         return () => {
             document.removeEventListener('click', handleClickOutside);
         };
-    }, []);
+    }, [setSelectSort]);
 
-    /** Ładujemy notatki z IndexedDB + kolejność z localStorage. */
     useEffect(() => {
         const fetchData = async () => {
             const loadedData = await loadAllData();
@@ -142,7 +134,6 @@ const DragAndDropFormList: React.FC = () => {
         fetchData();
     }, []);
 
-    /** Filtrowanie i sortowanie przy zmianie items/searchTerm/currentSort. */
     useEffect(() => {
         let newFiltered = [...items];
 
@@ -181,21 +172,165 @@ const DragAndDropFormList: React.FC = () => {
                 );
                 break;
             default:
-            // my-sort – nie sortujemy
         }
 
         setFilteredItems(newFiltered);
     }, [items, searchTerm, currentSort]);
 
-    // -------------------- FUNKCJE POMOCNICZE -------------------- //
+    useEffect(() => {
+        const handleDocSelectionChange = () => {
+            const selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0) {
+                setIsSelectionEmpty(true);
+                return;
+            }
+            const range = selection.getRangeAt(0);
+            const editor = editorRef.current;
+            if (
+                editor &&
+                editor.contains(range.commonAncestorContainer) &&
+                !selection.isCollapsed
+            ) {
+                setIsSelectionEmpty(false);
+            } else {
+                setIsSelectionEmpty(true);
+            }
+        };
 
-    /** Zapis kolejności do localStorage. */
+        document.addEventListener('selectionchange', handleDocSelectionChange);
+        return () => {
+            document.removeEventListener('selectionchange', handleDocSelectionChange);
+        };
+    }, []);
+
+    useEffect(() => {
+        const editor = editorRef.current;
+        if (!editor) return;
+
+        if (editor.childNodes.length === 0) {
+            const initialDiv = document.createElement('div');
+            initialDiv.innerHTML = '<br/>';
+            editor.appendChild(initialDiv);
+        } else {
+            normalizeEditorContent(editor);
+        }
+        checkEditorEmpty(editor);
+
+        mutationObserverRef.current = new MutationObserver((mutations) => {
+            let contentChanged = false;
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeName === 'BR' && mutation.target === editor) {
+                            const div = document.createElement('div');
+                            div.innerHTML = '<br/>';
+                            const parent = node.parentNode;
+                            if (parent) {
+                                parent.replaceChild(div, node);
+                            }
+                            placeCursorInNode(div);
+                            contentChanged = true;
+                        } else if (
+                            node.nodeType === Node.TEXT_NODE &&
+                            mutation.target === editor
+                        ) {
+                            const div = document.createElement('div');
+                            div.textContent = node.textContent || '';
+                            const parent = node.parentNode;
+                            if (parent) {
+                                parent.replaceChild(div, node);
+                            }
+                            contentChanged = true;
+                        } else if (
+                            node.nodeType === Node.ELEMENT_NODE &&
+                            mutation.target === editor &&
+                            node.nodeName !== 'DIV'
+                        ) {
+                            const replacement = document.createElement('div');
+                            replacement.innerHTML = (node as HTMLElement).innerHTML;
+                            const parent = node.parentNode;
+                            if (parent) {
+                                parent.replaceChild(replacement, node);
+                            }
+                            contentChanged = true;
+                        }
+                    });
+                }
+            });
+
+            if (contentChanged) {
+                if (visibleDescriptions) {
+                    const currentDescId = parseInt(visibleDescriptions, 10);
+                    if (!isNaN(currentDescId)) {
+                        const html = editor.innerHTML;
+                        handleDescriptionChange(html, currentDescId);
+                    }
+                }
+                checkEditorEmpty(editor);
+            }
+        });
+
+        mutationObserverRef.current.observe(editor, {
+            childList: true,
+            subtree: false,
+        });
+
+        return () => {
+            if (mutationObserverRef.current) {
+                mutationObserverRef.current.disconnect();
+            }
+        };
+    }, [visibleDescriptions]);
+
+    const handleKeyDownEditor = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.execCommand('insertHTML', false, '<div><br/></div>');
+        }
+    };
+
+    const normalizeEditorContent = (editor: HTMLDivElement) => {
+        const children = Array.from(editor.childNodes);
+        let currentBlock: HTMLDivElement | null = null;
+
+        children.forEach((node) => {
+            if (node.nodeName === 'BR') {
+                editor.removeChild(node);
+                currentBlock = null;
+            } else if (node.nodeName === 'DIV') {
+                currentBlock = null;
+            } else {
+                if (!currentBlock) {
+                    currentBlock = document.createElement('div');
+                    editor.insertBefore(currentBlock, node);
+                }
+                currentBlock.appendChild(node);
+            }
+        });
+
+        if (editor.childNodes.length === 0) {
+            const div = document.createElement('div');
+            div.innerHTML = '<br/>';
+            editor.appendChild(div);
+        }
+    };
+
+    const placeCursorInNode = (node: Node) => {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        range.collapse(false);
+        const sel = window.getSelection();
+        if (sel) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    };
+
     const saveOrderToStorage = (newOrder: FormData[]) => {
         const orderIds = newOrder.map((item) => item.id);
         saveDataToStorage('itemOrder', JSON.stringify(orderIds));
     };
 
-    /** Odczyt kolejności z localStorage i narzucenie notatkom. */
     const loadOrderFromStorage = (loadedItems: FormData[]): FormData[] => {
         const savedOrder = loadDataFromStorage('itemOrder');
         if (savedOrder) {
@@ -211,7 +346,6 @@ const DragAndDropFormList: React.FC = () => {
         return loadedItems;
     };
 
-    /** Obsługa drag&drop. */
     const handleOnDragEnd = (result: DropResult) => {
         if (!result.destination) return;
         if (currentSort !== 'my-sort') {
@@ -231,7 +365,6 @@ const DragAndDropFormList: React.FC = () => {
         });
     };
 
-    /** Dodanie nowej notatki. */
     const handleAddNewItem = async () => {
         const now = new Date().toLocaleString('pl-PL', {
             day: '2-digit',
@@ -248,16 +381,15 @@ const DragAndDropFormList: React.FC = () => {
             creationDate: now,
             lastModifiedDate: now,
             bgColor: 'o-bg-default',
+            toDoList: ''
         };
         setItems((prev) => [newItem, ...prev]);
         setFilteredItems((prev) => [newItem, ...prev]);
 
-        // Pokaż edytor od razu
         setVisibleDescriptions(String(newItem.id));
         setIsDescriptionVisible(true);
         setFocusedItemId(newItem.id);
 
-        // Inicjuj historię (undo) dla nowej notatki z tekstem bazowym (pustym)
         setUndoHistories((prev) => ({
             ...prev,
             [newItem.id]: [newItem.description],
@@ -270,7 +402,6 @@ const DragAndDropFormList: React.FC = () => {
         setShowSearch(false);
     };
 
-    /** Debounce zapisu notatki w IndexedDB. */
     const scheduleSaveItem = (id: number) => {
         if (saveTimers[id]) {
             clearTimeout(saveTimers[id]);
@@ -279,7 +410,6 @@ const DragAndDropFormList: React.FC = () => {
         setSaveTimers((prev) => ({ ...prev, [id]: newTimer }));
     };
 
-    /** Zmiana tytułu (input). */
     const handleTitleChange = (e: ChangeEvent<HTMLInputElement>, id: number) => {
         const newTitle = e.target.value;
         setItems((prev) =>
@@ -295,8 +425,15 @@ const DragAndDropFormList: React.FC = () => {
         scheduleSaveItem(id);
     };
 
-    /** Zmiana opisu w edytorze (przechowywana w item.description). */
     const handleDescriptionChange = (newDescription: string, id: number) => {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = newDescription;
+        const text = tempDiv.textContent?.trim();
+        const hasText = text && text !== '';
+        const hasImage = tempDiv.querySelector('img') || tempDiv.querySelector('svg');
+        if (!hasText && !hasImage) {
+            newDescription = "";
+        }
         setItems((prev) =>
             prev.map((it) =>
                 it.id === id ? { ...it, description: newDescription } : it
@@ -310,10 +447,6 @@ const DragAndDropFormList: React.FC = () => {
         scheduleSaveItem(id);
     };
 
-    /**
-     * Funkcja odświeżająca stan przycisków b/i/u/strikethrough
-     * i wykrywająca rozmiar fontu.
-     */
     const updateActiveButtons = () => {
         setFormatState({
             bold: document.queryCommandState('bold'),
@@ -322,23 +455,20 @@ const DragAndDropFormList: React.FC = () => {
             strikethrough: document.queryCommandState('strikeThrough'),
         });
 
-        // Wczytanie rozmiaru:
         const sizeStr = document.queryCommandValue('fontSize');
         if (sizeStr) {
             const parsed = parseInt(sizeStr, 10);
-            if (!isNaN(parsed)) {
-                setFontSizeLevel(parsed);
-            } else {
-                setFontSizeLevel(3);
-            }
+            setFontSizeLevel(!isNaN(parsed) ? parsed : 3);
         } else {
             setFontSizeLevel(3);
         }
 
-        editorRef.current?.focus();
+        if (editorRef.current) {
+            checkEditorEmpty(editorRef.current);
+            editorRef.current.focus();
+        }
     };
 
-    /** Formatowanie tekstu: Bold/Italic/Underline/StrikeThrough. */
     const handleFormatText = (
         command: 'bold' | 'italic' | 'underline' | 'strikeThrough'
     ) => {
@@ -346,29 +476,22 @@ const DragAndDropFormList: React.FC = () => {
         updateActiveButtons();
     };
 
-    /** Zwiększenie rozmiaru fontu z poziomu `fontSizeLevel`. */
     const handleIncreaseFontSize = () => {
         if (!window.getSelection) return;
-        // Zwiększamy w zakresie max 7
         const newLevel = Math.min(fontSizeLevel + 1, 7);
         setFontSizeLevel(newLevel);
-
         document.execCommand('fontSize', false, String(newLevel));
         updateActiveButtons();
     };
 
-    /** Zmniejszenie rozmiaru fontu z poziomu `fontSizeLevel`. */
     const handleDecreaseFontSize = () => {
         if (!window.getSelection) return;
-        // Minimalnie 1
         const newLevel = Math.max(fontSizeLevel - 1, 1);
         setFontSizeLevel(newLevel);
-
         document.execCommand('fontSize', false, String(newLevel));
         updateActiveButtons();
     };
 
-    /** Zapis do IndexedDB. */
     const handleSaveItem = async (id: number) => {
         const newDate = new Date().toLocaleString('pl-PL', {
             day: '2-digit',
@@ -404,7 +527,6 @@ const DragAndDropFormList: React.FC = () => {
         }
     };
 
-    /** Usuwanie notatki. */
     const handleRemoveItem = async (id: number) => {
         await deleteData(id);
         setItems((prev) => {
@@ -415,22 +537,17 @@ const DragAndDropFormList: React.FC = () => {
         setFilteredItems((prev) => prev.filter((it) => it.id !== id));
         setSelectedIds((prev) => prev.filter((x) => x !== id));
         setConfirmRemoveId(null);
-
-        // Wyczyść historię „undo” dla usuniętej notatki
         setUndoHistories((prev) => {
-            const { [id]: _omit, ...rest } = prev; // usuwamy klucz
+            const { [id]: _omit, ...rest } = prev;
             return rest;
         });
     };
 
-    /** Pokaż opis (edytor). */
     const showDescription = (id: string) => {
         setVisibleDescriptions(id);
         setIsDescriptionVisible(true);
         setFocusedItemId(Number(id));
 
-        // Upewnij się, że mamy zainicjowaną historię z aktualnym tekstem,
-        // jeśli wcześniej jej nie było.
         const numId = Number(id);
         const currentItem = items.find((it) => it.id === numId);
         const existingText = currentItem?.description || '';
@@ -440,10 +557,15 @@ const DragAndDropFormList: React.FC = () => {
         }));
     };
 
-    /** Ukryj opis, usuń puste. */
-    const hideDescription = (id: string) => {
+    const hideDescription = async (id: string) => {
         setVisibleDescriptions(null);
         setIsDescriptionVisible(false);
+
+        const item = items.find((it) => String(it.id) === id);
+        if (item && item.title.trim() === '' && item.description.trim() === '') {
+            await deleteData(item.id);
+        }
+
         setItems((prev) => {
             const updated = prev.filter((it) => {
                 if (String(it.id) === id) {
@@ -465,12 +587,10 @@ const DragAndDropFormList: React.FC = () => {
         });
     };
 
-    /** Potwierdzenie usuwania. */
     const handleConfirmRemoveItem = (id: number) => {
         setConfirmRemoveId(id);
     };
 
-    /** Kopiowanie bazy do schowka. */
     const handleCopyIndexedDB = async () => {
         try {
             const allData = await loadAllData();
@@ -484,7 +604,6 @@ const DragAndDropFormList: React.FC = () => {
         }
     };
 
-    /** Import pliku JSON. */
     const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -540,7 +659,6 @@ const DragAndDropFormList: React.FC = () => {
         }
     };
 
-    /** Zmiana koloru tła notatki. */
     const addBgColor = (id: number, color: string) => {
         setItems((prev) => {
             const updated = prev.map((it) => {
@@ -563,7 +681,6 @@ const DragAndDropFormList: React.FC = () => {
         setActiveColorButtons({});
     };
 
-    /** Pokazywanie/ukrywanie palety kolorów. */
     const toggleColorButton = (id: number) => {
         setActiveColorButtons((prev) => {
             if (prev[id]) {
@@ -574,23 +691,14 @@ const DragAndDropFormList: React.FC = () => {
         });
     };
 
-    // -------------------- MECHANIZM UNDO -------------------- //
-
-    /**
-     * Zapisuje nową wersję opisu w historii (stos) po każdej zmianie, np. co klawisz (keyUp).
-     * Nie duplikujemy identycznego stanu.
-     */
     const pushUndoHistory = (id: number, content: string) => {
         setUndoHistories((prev) => {
             const currentHistory = prev[id] || [''];
-            // Jeśli ostatni stan w historii jest taki sam, nie duplikuj
             if (currentHistory[currentHistory.length - 1] === content) {
                 return prev;
             }
-            // Ograniczamy do np. 10 ostatnich stanów
             const maxStates = 100;
             const newHistory = [...currentHistory, content].slice(-maxStates);
-
             return {
                 ...prev,
                 [id]: newHistory,
@@ -598,29 +706,18 @@ const DragAndDropFormList: React.FC = () => {
         });
     };
 
-    /**
-     * Cofnięcie ostatniej zmiany w notatce o danym id.
-     * Wraca do poprzedniego zapisanego stanu.
-     */
     const handleUndo = (id: number) => {
         setUndoHistories((prev) => {
             const currentHistory = prev[id] || [''];
-            // Jeśli mamy mniej niż 2 stany – nie cofamy:
             if (currentHistory.length < 2) {
                 return prev;
             }
-            // Usuwamy ostatni stan:
             const newHistory = currentHistory.slice(0, -1);
-
-            // Wczytujemy poprzedni stan, który staje się aktualnym
             const previousContent = newHistory[newHistory.length - 1];
-
-            // Aktualizuj editorRef i stan itemu:
             if (editorRef.current && String(visibleDescriptions) === String(id)) {
                 editorRef.current.innerHTML = previousContent;
             }
             handleDescriptionChange(previousContent, id);
-
             return {
                 ...prev,
                 [id]: newHistory,
@@ -629,7 +726,72 @@ const DragAndDropFormList: React.FC = () => {
         editorRef.current?.focus();
     };
 
-    // -------------------- SELECTION (checkboxy) -------------------- //
+    const handleClearSelection = () => {
+        const editorElement = editorRef.current;
+        if (!editorElement) return;
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        let targetElem: Node = range.commonAncestorContainer;
+        if (targetElem.nodeType === Node.TEXT_NODE) {
+            targetElem = (targetElem as Text).parentElement!;
+        }
+        if (!(targetElem instanceof HTMLElement)) return;
+
+        if (targetElem.classList.contains('o-editor__main')) {
+            const fragment = range.cloneContents();
+            const tempDiv = document.createElement('div');
+            tempDiv.appendChild(fragment);
+            const htmlFragment = tempDiv.innerHTML;
+            const cleanText = htmlFragment
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<[^>]+>/g, '');
+            range.deleteContents();
+            const textNode = document.createTextNode(cleanText);
+            range.insertNode(textNode);
+        } else {
+            let current: HTMLElement = targetElem as HTMLElement;
+            while (current.parentElement && current.parentElement !== editorElement) {
+                current = current.parentElement;
+            }
+            if (current === editorElement || current.classList.contains('o-editor__main')) {
+                const fragment = range.cloneContents();
+                const tempDiv = document.createElement('div');
+                tempDiv.appendChild(fragment);
+                const htmlFragment = tempDiv.innerHTML;
+                const cleanText = htmlFragment
+                    .replace(/<br\s*\/?>/gi, '\n')
+                    .replace(/<[^>]+>/g, '');
+                range.deleteContents();
+                const textNode = document.createTextNode(cleanText);
+                range.insertNode(textNode);
+            } else {
+                const plainText = current.textContent || '';
+                const newWrapper = document.createElement('div');
+                newWrapper.textContent = plainText;
+                if (current.parentElement) {
+                    current.parentElement.replaceChild(newWrapper, current);
+                }
+            }
+        }
+
+        selection.removeAllRanges();
+        const newRange = document.createRange();
+        newRange.selectNodeContents(editorElement);
+        newRange.collapse(false);
+        selection.addRange(newRange);
+
+        if (visibleDescriptions) {
+            const currentDescId = parseInt(visibleDescriptions, 10);
+            if (!isNaN(currentDescId)) {
+                pushUndoHistory(currentDescId, editorElement.innerHTML);
+                handleDescriptionChange(editorElement.innerHTML, currentDescId);
+            }
+        }
+        updateActiveButtons();
+    };
 
     const areAllSelected =
         filteredItems.length > 0 &&
@@ -691,12 +853,43 @@ const DragAndDropFormList: React.FC = () => {
 
     const stripHtml = (html: string) => {
         return html
-            .replace(/<\/?[^>]+(>|$)/g, ' ')  // zamień wszystkie tagi na spację
-            .replace(/\s+/g, ' ')            // skompresuj wielokrotne spacje do jednej
-            .trim();                         // usuń zbędne spacje na początku i końcu
+            .replace(/<\/?[^>]+(>|$)/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
     };
 
-    // -------------------- RENDER -------------------- //
+    const handleToggleToDo = async (id: number) => {
+        setItems((prevItems) => {
+            return prevItems.map((it) => {
+                if (it.id === id) {
+                    const toggledValue = it.toDoList === 'true' ? '' : 'true';
+                    return { ...it, toDoList: toggledValue };
+                }
+                return it;
+            });
+        });
+
+        setFilteredItems((prevFiltered) => {
+            return prevFiltered.map((it) => {
+                if (it.id === id) {
+                    const toggledValue = it.toDoList === 'true' ? '' : 'true';
+                    return { ...it, toDoList: toggledValue };
+                }
+                return it;
+            });
+        });
+
+        const currentItem = items.find((it) => it.id === id);
+        if (currentItem) {
+            const toggledValue = currentItem.toDoList === 'true' ? '' : 'true';
+            const updatedItem: FormData = { ...currentItem, toDoList: toggledValue };
+            try {
+                await saveData(updatedItem);
+            } catch (error) {
+                console.error('Error toggling to-do:', error);
+            }
+        }
+    };
 
     return (
         <>
@@ -744,17 +937,11 @@ const DragAndDropFormList: React.FC = () => {
                                     >
                                         {(provided) => (
                                             <li
-                                                className={`o-item ${item.bgColor} 
-                                                    ${
-                                                    selectedIds.includes(item.id)
-                                                        ? 'o-item--check'
-                                                        : 'o-item--check-empty'
-                                                }
-                                                    ${
-                                                    String(visibleDescriptions) === String(item.id)
-                                                        ? ' o-active-item'
-                                                        : ''
-                                                }`}
+                                                className={`o-item ${item.bgColor}
+                                                    ${selectedIds.includes(item.id) ? 'o-item--check' : 'o-item--check-empty'}
+                                                    ${String(visibleDescriptions) === String(item.id) ? 'o-active-item' : ''}
+                                                    ${item.toDoList === 'true' ? 'o-item--to-do' : ''}
+                                                `}
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
                                             >
@@ -767,12 +954,12 @@ const DragAndDropFormList: React.FC = () => {
                                                     <span>{t('move')}</span>
                                                     <p className="o-item-date">
                                                         <span className="o-creation-date">
-                                                            Stworzono: {item.creationDate}
+                                                            {t('created')}: {item.creationDate}
                                                         </span>
                                                         <br />
                                                         {item.lastModifiedDate && (
                                                             <span className="o-last-modified-date">
-                                                                Modyfikowano: {item.lastModifiedDate}
+                                                                {t('modified')}: {item.lastModifiedDate}
                                                             </span>
                                                         )}
                                                     </p>
@@ -782,8 +969,8 @@ const DragAndDropFormList: React.FC = () => {
                                                     {String(visibleDescriptions) === String(item.id) ? (
                                                         <>
                                                             <button
-                                                                title={t('return')}
-                                                                className="o-circle-btn o-circle-btn--fixed"
+                                                                title={t('go_back')}
+                                                                className="o-circle-btn o-circle-btn--go-back o-circle-btn--fixed"
                                                                 onClick={() =>
                                                                     hideDescription(String(item.id))
                                                                 }
@@ -796,14 +983,7 @@ const DragAndDropFormList: React.FC = () => {
                                                                 }
                                                             >
                                                                 <i className="icon-level-up"></i>
-                                                                {t('return')}
-                                                            </button>
-                                                            <button
-                                                                className="o-btn-save"
-                                                                onClick={() => handleSaveItem(item.id)}
-                                                            >
-                                                                <i className="icon-floppy"></i>
-                                                                {t('save')}
+                                                                {t('go_back')}
                                                             </button>
                                                         </>
                                                     ) : (
@@ -813,29 +993,23 @@ const DragAndDropFormList: React.FC = () => {
                                                             }
                                                         >
                                                             <i className="icon-pencil"></i>
-                                                            {t('edit')}
                                                         </button>
                                                     )}
                                                     <button
-                                                        className={`o-note-bg ${
-                                                            activeColorButtons[item.id]
-                                                                ? 'o-bg-dark'
-                                                                : ''
-                                                        }`}
+                                                        className={`o-note-bg ${activeColorButtons[item.id] ? 'o-bg-dark' : ''}`}
                                                         onClick={() => toggleColorButton(item.id)}
                                                     >
-                                                        <i
-                                                            className={
-                                                                activeColorButtons[item.id]
-                                                                    ? 'icon-cancel'
-                                                                    : 'icon-down-open'
-                                                            }
-                                                        />
-                                                        Color{' '}
-                                                        <span
-                                                            className={`o-note-bg__box-color ${item.bgColor}`}
-                                                        />
+                                                        <i className={activeColorButtons[item.id] ? 'icon-cancel' : 'icon-down-open'} />
+                                                        <span className={`o-note-bg__box-color ${item.bgColor}`} />
                                                     </button>
+                                                    {String(visibleDescriptions) === String(item.id) && (
+                                                        <button
+                                                            className="o-btn-save"
+                                                            onClick={() => handleSaveItem(item.id)}
+                                                        >
+                                                            <i className="icon-floppy"></i>
+                                                        </button>
+                                                    )}
                                                     {confirmRemoveId === item.id ? (
                                                         <div className="o-modal-remove">
                                                             <div className="o-modal-remove__container">
@@ -844,9 +1018,7 @@ const DragAndDropFormList: React.FC = () => {
                                                                     <button
                                                                         className="o-btn-remove"
                                                                         onClick={() => {
-                                                                            hideDescription(
-                                                                                String(item.id)
-                                                                            );
+                                                                            hideDescription(String(item.id));
                                                                             handleRemoveItem(item.id);
                                                                         }}
                                                                     >
@@ -872,9 +1044,20 @@ const DragAndDropFormList: React.FC = () => {
                                                             }
                                                         >
                                                             <i className="icon-trash-empty"></i>
-                                                            {t('remove')}
                                                         </button>
                                                     )}
+
+                                                    {String(visibleDescriptions) === String(item.id) && (
+                                                        <button
+                                                            className="o-btn-to-do ml-auto"
+                                                            onClick={() => handleToggleToDo(item.id)}
+                                                        >
+                                                            <span className="o-cloud-info">{t('list')}</span>
+                                                            <i className="icon-list-numbered"></i>
+                                                            {/*<i className="icon-clipboard"></i>*/}
+                                                        </button>
+                                                    )}
+
                                                     {activeColorButtons[item.id] && (
                                                         <ul className="o-color-picker">
                                                             <li
@@ -915,30 +1098,21 @@ const DragAndDropFormList: React.FC = () => {
                                                         </ul>
                                                     )}
 
-                                                    {String(visibleDescriptions) !==
-                                                        String(item.id) && (
-                                                            <label className="o-checkbox">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={selectedIds.includes(item.id)}
-                                                                    onChange={() =>
-                                                                        handleToggleItemSelection(item.id)
-                                                                    }
-                                                                />
-                                                                <i
-                                                                    className={`${
-                                                                        selectedIds.includes(item.id)
-                                                                            ? 'icon-check'
-                                                                            : 'icon-check-empty'
-                                                                    } icon--bigger`}
-                                                                ></i>
-                                                            </label>
-                                                        )}
+                                                    {String(visibleDescriptions) !== String(item.id) && (
+                                                        <label className="o-checkbox">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedIds.includes(item.id)}
+                                                                onChange={() =>
+                                                                    handleToggleItemSelection(item.id)
+                                                                }
+                                                            />
+                                                            <i className={`${selectedIds.includes(item.id) ? 'icon-check' : 'icon-check-empty'} icon--bigger`}></i>
+                                                        </label>
+                                                    )}
                                                 </div>
 
-                                                {/* Tytuł */}
-                                                {!(String(visibleDescriptions) !== String(item.id) &&
-                                                    item.title === '') && (
+                                                {!(String(visibleDescriptions) !== String(item.id) && item.title === '') && (
                                                     <input
                                                         ref={(el) => {
                                                             if (el && item.id === focusedItemId) {
@@ -951,30 +1125,25 @@ const DragAndDropFormList: React.FC = () => {
                                                         onChange={(e) =>
                                                             handleTitleChange(e, item.id)
                                                         }
-                                                        placeholder="Enter title"
+                                                        placeholder={`${t('enter_title')}...`}
                                                         onClick={() =>
                                                             showDescription(String(item.id))
                                                         }
                                                     />
                                                 )}
 
-                                                {/* Edytor opisu */}
                                                 {visibleDescriptions === String(item.id) ? (
                                                     <div className="o-editor">
                                                         <div
+                                                            title={(item.toDoList === 'true') ? `${t('enter_items_into_the_list')}:` : `${t('enter_text')}...`}
                                                             className="o-editor__main"
                                                             contentEditable
                                                             suppressContentEditableWarning
-                                                            onFocus={(e) => {
-                                                                const el = e.currentTarget;
-                                                                if (el.innerHTML.trim() === '<br>') {
-                                                                    el.innerHTML = '';
-                                                                }
-                                                            }}
+                                                            onKeyDown={handleKeyDownEditor}
                                                             onKeyUp={(e) => {
                                                                 updateActiveButtons();
-                                                                // Zapis stanu w historii przy każdej zmianie:
                                                                 pushUndoHistory(item.id, e.currentTarget.innerHTML);
+                                                                checkEditorEmpty(e.currentTarget);
                                                             }}
                                                             onMouseUp={() => updateActiveButtons()}
                                                             onBlur={(e) => {
@@ -984,67 +1153,43 @@ const DragAndDropFormList: React.FC = () => {
                                                                 }
                                                                 const newDesc = el.innerHTML;
                                                                 handleDescriptionChange(newDesc, item.id);
+                                                                checkEditorEmpty(el);
                                                             }}
                                                             ref={(el) => {
                                                                 if (el) {
                                                                     editorRef.current = el;
-                                                                }
-                                                                // Jeśli notatka ma tekst, wypełnij edytor
-                                                                if (
-                                                                    el &&
-                                                                    el.innerHTML.trim() === '' &&
-                                                                    item.description.trim() !== ''
-                                                                ) {
-                                                                    el.innerHTML = item.description;
+                                                                    if (el.innerHTML.trim() === '' && item.description.trim() !== '') {
+                                                                        el.innerHTML = item.description;
+                                                                        normalizeEditorContent(el);
+                                                                    } else if (el.innerHTML.trim() === '') {
+                                                                        el.innerHTML = '<div><br/></div>';
+                                                                    }
+                                                                    checkEditorEmpty(el);
                                                                 }
                                                             }}
                                                         />
                                                         <div className="o-editor__buttons">
                                                             <button
-                                                                className={
-                                                                    formatState.bold
-                                                                        ? 'o-btn--active'
-                                                                        : ''
-                                                                }
-                                                                onClick={() =>
-                                                                    handleFormatText('bold')
-                                                                }
+                                                                className={formatState.bold ? 'o-btn--active' : ''}
+                                                                onClick={() => handleFormatText('bold')}
                                                             >
                                                                 b
                                                             </button>
                                                             <button
-                                                                className={
-                                                                    formatState.italic
-                                                                        ? 'o-btn--active'
-                                                                        : ''
-                                                                }
-                                                                onClick={() =>
-                                                                    handleFormatText('italic')
-                                                                }
+                                                                className={formatState.italic ? 'o-btn--active' : ''}
+                                                                onClick={() => handleFormatText('italic')}
                                                             >
                                                                 i
                                                             </button>
                                                             <button
-                                                                className={
-                                                                    formatState.underline
-                                                                        ? 'o-btn--active'
-                                                                        : ''
-                                                                }
-                                                                onClick={() =>
-                                                                    handleFormatText('underline')
-                                                                }
+                                                                className={formatState.underline ? 'o-btn--active' : ''}
+                                                                onClick={() => handleFormatText('underline')}
                                                             >
                                                                 u
                                                             </button>
                                                             <button
-                                                                className={`o-btn--strike ${
-                                                                    formatState.strikethrough
-                                                                        ? 'o-btn--active'
-                                                                        : ''
-                                                                }`}
-                                                                onClick={() =>
-                                                                    handleFormatText('strikeThrough')
-                                                                }
+                                                                className={`o-btn--strike ${formatState.strikethrough ? 'o-btn--active' : ''}`}
+                                                                onClick={() => handleFormatText('strikeThrough')}
                                                             >
                                                                 del
                                                             </button>
@@ -1054,22 +1199,23 @@ const DragAndDropFormList: React.FC = () => {
                                                             <button onClick={handleDecreaseFontSize}>
                                                                 A-
                                                             </button>
-
-                                                            {/* Przycisk „Undo” */}
                                                             <button
                                                                 className="o-btn--undo"
                                                                 onClick={() => handleUndo(item.id)}
-                                                                disabled={
-                                                                    !undoHistories[item.id] ||
-                                                                    undoHistories[item.id].length < 2
-                                                                }
+                                                                disabled={!undoHistories[item.id] || undoHistories[item.id].length < 2}
                                                             >
                                                                 {t('undo')}
+                                                            </button>
+                                                            <button
+                                                                className="o-btn--clear"
+                                                                onClick={handleClearSelection}
+                                                                disabled={isSelectionEmpty}
+                                                            >
+                                                                {t('clear')}
                                                             </button>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    // Gdy nie edytujemy, ale nie ma tytułu, a jest opis
                                                     item.title === '' &&
                                                     item.description !== '' && (
                                                         <input

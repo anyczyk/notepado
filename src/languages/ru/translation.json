@@ -144,5 +144,22 @@
   "premium_account": "Premium аккаунт",
   "active": "Активен",
   "code": "Код",
-  "wrong_code": "Неверный код"
+  "wrong_code": "Неверный код",
+  "add": "Добавить",
+  "sort": "Сортировать",
+  "color": "Цвет",
+  "created": "Создано",
+  "modified": "Изменено",
+  "notepad": "Блокнот",
+  "action": "Действие",
+  "my_sorting": "Моя сортировка",
+  "by_date_added_from_newest": "По дате добавления, от новых",
+  "by_date_added_from_oldest": "По дате добавления, от старых",
+  "by_date_modified_from_newest": "По дате изменения, от новых",
+  "by_date_modified_from_oldest": "По дате изменения, от старых",
+  "copy": "Копировать",
+  "enter_title": "Введите заголовок",
+  "enter_items_into_the_list": "Введите элементы в список",
+  "to-do-list": "Список дел",
+  "list": "список"
 }
